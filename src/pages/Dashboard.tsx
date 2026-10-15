@@ -1,22 +1,13 @@
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 // Placeholder: next step replaces this with the real projects list
 export default function Dashboard() {
-  const { profile, session, signOut } = useAuth()
+  const { profile, loading } = useAuth()
 
-  return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">
-          Welcome, {profile?.full_name ?? session?.user.email}
-        </h1>
-        <button onClick={signOut} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
-          Log out
-        </button>
-      </div>
-      <p className="mt-2 text-slate-600">
-        Role: <span className="font-medium">{profile?.role ?? 'unknown'}</span>
-      </p>
-    </div>
-  )
+  if (loading) return <p className="text-sm text-slate-500">Loading your account…</p>
+  if (!profile) {
+    return <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Your account profile could not be loaded. Please sign out and sign in again.</p>
+  }
+  return <Navigate to={profile.role === 'admin' ? '/admin' : '/projects'} replace />
 }

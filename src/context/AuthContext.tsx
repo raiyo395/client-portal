@@ -1,12 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-
-export type Profile = {
-  id: string
-  full_name: string | null
-  role: 'admin' | 'client'
-}
+import type { Profile } from '../types'
+export type { Profile } from '../types'
 
 type AuthContextValue = {
   session: Session | null

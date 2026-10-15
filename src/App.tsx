@@ -1,7 +1,10 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
+import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
+import AdminProjectsPage from './pages/admin/AdminProjectsPage'
+import AdminProjectDetailPage from './pages/admin/AdminProjectDetailPage'
 
 export default function App() {
   return (
@@ -10,12 +13,18 @@ export default function App() {
 
       {/* Any logged-in user */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+        </Route>
       </Route>
 
-      {/* Admin-only area (built in a later step) */}
+      {/* Admin-only area */}
       <Route element={<ProtectedRoute adminOnly />}>
-        {/* <Route path="/admin" element={<AdminDashboard />} /> */}
+        <Route element={<Layout />}>
+          <Route path="/admin" element={<Navigate to="/admin/projects" replace />} />
+          <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
+          <Route path="/admin/projects" element={<AdminProjectsPage />} />
+        </Route>
       </Route>
     </Routes>
   )

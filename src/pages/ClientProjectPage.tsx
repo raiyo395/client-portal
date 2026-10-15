@@ -26,7 +26,16 @@ export default function ClientProjectPage() {
     }
   }, [id])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    let cancelled = false
+    void fetchClientProjectDetails(id)
+      .then((result) => { if (!cancelled) setDetails(result) })
+      .catch((caught: unknown) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [id])
 
   async function submitDecision(milestoneId: string, decision: Approval['decision']) {
     const comment = comments[milestoneId]?.trim() ?? ''

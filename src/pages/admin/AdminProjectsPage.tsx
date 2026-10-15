@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import ProgressBar from '../../components/ProgressBar'
 import StatusBadge from '../../components/StatusBadge'
-import { fetchAdminProjects, fetchClientProfiles, type AdminProjectRow } from '../../lib/adminProjects'
-import { supabase } from '../../lib/supabase'
-import type { Profile, Project } from '../../types'
+import { createAdminProject, fetchAdminProjects, fetchClientProfiles, type AdminProjectRow } from '../../lib/adminProjects'
+import type { Profile } from '../../types'
 
 type ClientOption = Pick<Profile, 'id' | 'full_name'>
 
@@ -41,7 +40,12 @@ export default function AdminProjectsPage() {
         if (!cancelled) setFormError(caught instanceof Error ? `Could not load clients: ${caught.message}` : 'Could not load clients.')
       })
       .finally(() => { if (!cancelled) setClientsLoading(false) })
-    void loadProjects()
+    void fetchAdminProjects()
+      .then((rows) => { if (!cancelled) setProjects(rows) })
+      .catch((caught: unknown) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [loadProjects])
 
@@ -49,16 +53,27 @@ export default function AdminProjectsPage() {
     event.preventDefault()
     setFormError(null)
     setSuccess(null)
-    setSaving(true)
-    const { error: insertError } = await supabase.from('projects').insert({
-      client_id: clientId,
-      name: name.trim(),
-      description: description.trim() || null,
-    })
-    setSaving(false)
-    if (insertError) {
-      setFormError(`Could not create project: ${insertError.message}`)
+    const trimmedName = name.trim()
+    if (!trimmedName) {
+      setFormError('Enter a project name.')
       return
+    }
+    if (!clientId) {
+      setFormError('Choose a client for this project.')
+      return
+    }
+    setSaving(true)
+    try {
+      await createAdminProject({
+        client_id: clientId,
+        name: trimmedName,
+        description: description.trim() || null,
+      })
+    } catch (caught) {
+      setFormError(`Could not create project: ${caught instanceof Error ? caught.message : 'Network request failed.'}`)
+      return
+    } finally {
+      setSaving(false)
     }
     setName('')
     setDescription('')
@@ -93,6 +108,7 @@ export default function AdminProjectsPage() {
             <textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} className="w-full resize-y rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-slate-500" />
           </label>
         </div>
+        {!clientsLoading && clients.length === 0 && !formError && <p className="mt-3 text-sm text-amber-800">No client profiles are available. Create or enable a client account before adding a project.</p>}
         {formError && <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{formError}</p>}
         {success && <p role="status" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{success}</p>}
         <button type="submit" disabled={saving || clientsLoading || clients.length === 0} className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">

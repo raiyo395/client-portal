@@ -29,7 +29,16 @@ export default function AdminProjectDetailPage() {
     }
   }, [id])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    let cancelled = false
+    void fetchAdminProjectDetails(id)
+      .then((result) => { if (!cancelled) setDetails(result) })
+      .catch((caught: unknown) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [id])
 
   async function updateProjectStatus(status: Project['status']) {
     if (!details) return

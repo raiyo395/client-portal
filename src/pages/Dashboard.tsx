@@ -1,7 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-// Placeholder: next step replaces this with the real projects list
 export default function Dashboard() {
   const { profile, loading } = useAuth()
 

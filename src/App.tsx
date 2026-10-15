@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import AdminProjectsPage from './pages/admin/AdminProjectsPage'
 import AdminProjectDetailPage from './pages/admin/AdminProjectDetailPage'
+import ClientProjectsPage from './pages/ClientProjectsPage'
+import ClientProjectPage from './pages/ClientProjectPage'
 
 export default function App() {
   return (
@@ -15,6 +17,14 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
+        </Route>
+      </Route>
+
+      {/* Client area */}
+      <Route element={<ProtectedRoute clientOnly />}>
+        <Route element={<Layout />}>
+          <Route path="/projects" element={<ClientProjectsPage />} />
+          <Route path="/projects/:id" element={<ClientProjectPage />} />
         </Route>
       </Route>
 

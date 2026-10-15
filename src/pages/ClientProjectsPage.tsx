@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProgressBar from '../components/ProgressBar'
 import StatusBadge from '../components/StatusBadge'
@@ -11,20 +11,19 @@ export default function ClientProjectsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    if (!profile) return
-    setLoading(true)
-    setError(null)
-    try {
-      setProjects(await fetchClientProjects(profile.id))
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    let cancelled = false
+    if (!profile) {
+      return
     }
+    void fetchClientProjects(profile.id)
+      .then((rows) => { if (!cancelled) setProjects(rows) })
+      .catch((caught: unknown) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [profile])
-
-  useEffect(() => { void load() }, [load])
 
   return (
     <section className="space-y-6">

@@ -6,7 +6,7 @@ export default function ProtectedRoute({ adminOnly = false, clientOnly = false }
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-slate-500">
+      <div className="flex min-h-screen items-center justify-center bg-[#070B08] text-[#aab8ad]">
         Loading...
       </div>
     )

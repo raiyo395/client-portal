@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #e0e9e2;
+  background: #070B08;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+* { box-sizing: border-box; }
+body { min-width: 320px; min-height: 100vh; margin: 0; }
+button, input, textarea, select { font: inherit; }
+button, a, select { -webkit-tap-highlight-color: transparent; }
+::selection { background: #c8ef8d; color: #172923; }
+
+:focus-visible { outline: 3px solid #b7d995; outline-offset: 2px; }
+
+@keyframes portal-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter { animation: portal-enter 480ms cubic-bezier(.2,.7,.2,1) both; }
+.motion-card { transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, border-color 220ms ease; }
+.motion-card:hover { transform: translateY(-3px); border-color: #526b55; box-shadow: 0 18px 42px -24px rgb(0 0 0 / 72%); }
+.brand-mark { transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease; }
+.brand-mark:hover { transform: rotate(-5deg) scale(1.06); box-shadow: 0 0 22px rgb(200 239 141 / 24%); }
+.progress-fill { transition: width 700ms cubic-bezier(.2,.7,.2,1); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+@layer components {
+  .portal-input {
+    @apply w-full rounded-xl border border-[#223127] bg-[#141D17] px-3.5 py-2.5 text-sm font-normal text-[#e0e9e2] shadow-sm outline-none transition placeholder:text-[#7f8f83] focus:border-[#a6c191] focus:ring-4 focus:ring-[#a6c191]/20;
+  }
+}

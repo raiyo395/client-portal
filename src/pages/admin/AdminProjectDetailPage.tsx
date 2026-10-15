@@ -99,54 +99,57 @@ export default function AdminProjectDetailPage() {
     await load()
   }
 
-  if (loading) return <p className="text-sm text-slate-500">Loading project…</p>
-  if (error) return <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">Could not load project: {error}</p>
-  if (!details) return <section className="space-y-3"><h1 className="text-2xl font-semibold">Project not found</h1><p className="text-sm text-slate-600">This project may have been removed or the link may be incorrect.</p><Link to="/admin/projects" className="inline-block text-sm font-medium underline">Back to projects</Link></section>
+  if (loading) return <p className="rounded-2xl border border-[#223127] bg-[#141D17] p-6 text-sm text-[#aab8ad]">Loading project…</p>
+  if (error) return <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-4 text-sm text-[#e0a182]">Could not load project: {error}</p>
+  if (!details) return <section className="rounded-2xl border border-[#223127] bg-[#141D17] p-8"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9aa99e]">Admin workspace</p><h1 className="mt-3 text-2xl font-semibold text-[#e0e9e2]">Project not found</h1><p className="mt-2 text-sm text-[#aab8ad]">This project may have been removed or the link may be incorrect.</p><Link to="/admin/projects" className="mt-5 inline-flex text-sm font-semibold text-[#b7d39f] underline underline-offset-4">Back to projects</Link></section>
 
   return (
-    <section className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><Link to="/admin/projects" className="text-sm text-slate-600 hover:underline">← All projects</Link><h1 className="mt-2 text-2xl font-semibold tracking-tight">{details.project.name}</h1><p className="mt-1 text-sm text-slate-600">{details.project.description || 'No project description.'}</p></div>
-        <label className="flex items-center gap-2 text-sm font-medium">Project status
-          <select aria-label="Project status" value={details.project.status} disabled={savingProject} onChange={(event) => { void updateProjectStatus(event.target.value as Project['status']) }} className="rounded-lg border border-slate-300 bg-white px-3 py-2 capitalize">
+    <section className="space-y-7">
+      <div className="rounded-[24px] border border-[#223127] bg-[#141D17] p-5 sm:p-7">
+        <Link to="/admin/projects" className="text-xs font-semibold text-[#aab8ad] hover:text-[#c9d7cd]">← All projects</Link>
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9aa99e]">Project details</p><h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#e0e9e2]">{details.project.name}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#aab8ad]">{details.project.description || 'No project description.'}</p></div>
+          <label className="flex items-center gap-3 rounded-xl bg-[#141D17] px-4 py-3 text-xs font-semibold text-[#c4d2c8]">Project status
+          <select aria-label="Project status" value={details.project.status} disabled={savingProject} onChange={(event) => { void updateProjectStatus(event.target.value as Project['status']) }} className="rounded-lg border border-[#223127] bg-[#141D17] px-3 py-2 text-sm capitalize text-[#d5e1d7]">
             <option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option>
           </select>
-        </label>
+          </label>
+        </div>
       </div>
 
-      {actionError && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{actionError}</p>}
+      {actionError && <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{actionError}</p>}
 
-      <form onSubmit={addMilestone} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Add milestone</h2>
+      <form onSubmit={addMilestone} className="rounded-2xl border border-[#223127] bg-[#141D17] p-5 sm:p-6">
+        <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#aab8ad]">Keep things moving</p><h2 className="mt-1 text-lg font-semibold text-[#e0e9e2]">Add a milestone</h2></div><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#141D17] text-lg text-[#b7d39f]">＋</span></div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="space-y-1.5 text-sm font-medium">Title<input required maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" /></label>
-          <label className="space-y-1.5 text-sm font-medium">Due date <span className="font-normal text-slate-500">(optional)</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" /></label>
-          <label className="space-y-1.5 text-sm font-medium sm:col-span-2">Description <span className="font-normal text-slate-500">(optional)</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} className="w-full resize-y rounded-lg border border-slate-300 px-3 py-2 font-normal" /></label>
+          <label className="space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Title<input required maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. First design review" className="portal-input" /></label>
+          <label className="space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Due date <span className="font-normal text-[#9aa99e]">· optional</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className="portal-input" /></label>
+          <label className="space-y-1.5 text-xs font-semibold text-[#c4d2c8] sm:col-span-2">Description <span className="font-normal text-[#9aa99e]">· optional</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Add useful context for your client" className="portal-input resize-y" /></label>
         </div>
-        <button type="submit" disabled={addingMilestone} className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50">{addingMilestone ? 'Adding…' : 'Add milestone'}</button>
+        <button type="submit" disabled={addingMilestone} className="mt-4 rounded-xl bg-[#203d30] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2a4c3a] disabled:opacity-50">{addingMilestone ? 'Adding…' : 'Add milestone'} <span aria-hidden="true">→</span></button>
       </form>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Milestones</h2>
-        {details.milestones.length === 0 && <p className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">No milestones yet. Add one above to get started.</p>}
+        <div><h2 className="text-lg font-semibold tracking-tight text-[#e0e9e2]">Milestones</h2><p className="mt-1 text-xs text-[#aab8ad]">Ordered by project sequence.</p></div>
+        {details.milestones.length === 0 && <p className="rounded-2xl border border-dashed border-[#223127] bg-[#141D17] p-8 text-center text-sm text-[#aab8ad]">No milestones yet. Add one above to get started.</p>}
         <div className="space-y-4">{details.milestones.map((milestone) => (
-          <article key={milestone.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <article key={milestone.id} className="motion-card rounded-2xl border border-[#223127] bg-[#141D17] p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div><div className="flex flex-wrap items-center gap-2"><h3 className="text-base font-semibold">{milestone.title}</h3><StatusBadge status={milestone.status} /></div>
-                {milestone.due_date && <p className="mt-2 text-sm text-slate-500">Due {new Date(`${milestone.due_date}T00:00:00`).toLocaleDateString()}</p>}
-                {milestone.description && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{milestone.description}</p>}
+                {milestone.due_date && <p className="mt-2 text-xs font-medium text-[#9aa99e]">Due {new Date(`${milestone.due_date}T00:00:00`).toLocaleDateString()}</p>}
+                {milestone.description && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#aab8ad]">{milestone.description}</p>}
               </div>
               <div className="flex gap-2">
-                {(milestone.status === 'pending' || milestone.status === 'changes_requested') && <button type="button" onClick={() => void setInReview(milestone)} className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800">Send for review</button>}
-                <button type="button" onClick={() => void deleteMilestone(milestone)} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50">Delete</button>
+                {(milestone.status === 'pending' || milestone.status === 'changes_requested') && <button type="button" onClick={() => void setInReview(milestone)} className="rounded-xl bg-[#416c4b] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#355c3e]">Send for review <span aria-hidden="true">→</span></button>}
+                <button type="button" onClick={() => void deleteMilestone(milestone)} className="rounded-xl border border-[#56382d] px-3 py-2 text-xs font-semibold text-[#e0a182] transition hover:bg-[#39251f]">Delete</button>
               </div>
             </div>
-            <div className="mt-5 border-t border-slate-100 pt-4">
-              <h4 className="text-sm font-semibold">Approval history</h4>
-              {milestone.approvals.length === 0 ? <p className="mt-2 text-sm text-slate-500">No decisions yet.</p> : <ol className="mt-3 space-y-3">{milestone.approvals.map((approval) => (
-                <li key={approval.id} className="rounded-lg bg-slate-50 p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2"><StatusBadge status={approval.decision} /><span className="text-xs text-slate-500">{approval.author_name} · {new Date(approval.created_at).toLocaleString()}</span></div>
-                  {approval.comment && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{approval.comment}</p>}
+              <div className="mt-5 border-t border-[#223127] pt-4">
+              <h4 className="text-xs font-bold uppercase tracking-[0.13em] text-[#aab8ad]">Approval history</h4>
+              {milestone.approvals.length === 0 ? <p className="mt-2 text-sm text-[#9aa99e]">No decisions yet.</p> : <ol className="mt-3 space-y-3">{milestone.approvals.map((approval) => (
+                <li key={approval.id} className="rounded-xl bg-[#223127] p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2"><StatusBadge status={approval.decision} /><span className="text-xs text-[#9aa99e]">{approval.author_name} · {new Date(approval.created_at).toLocaleString()}</span></div>
+                  {approval.comment && <p className="mt-2 whitespace-pre-wrap text-sm text-[#bfcdc2]">{approval.comment}</p>}
                 </li>
               ))}</ol>}
             </div>

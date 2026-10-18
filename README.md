@@ -8,6 +8,7 @@ A shared workspace where clients and administrators can follow project milestone
 - Project and milestone tracking with progress summaries
 - Client approval and change-request workflow
 - Approval history attached to each milestone
+- Private project file uploads and signed downloads
 - Supabase authentication and row-level security
 
 ## Stack
@@ -30,7 +31,7 @@ A shared workspace where clients and administrators can follow project milestone
 
    Copy these values from the Supabase project settings. These are browser-safe project settings; never put a service-role key in this app.
 
-3. Apply the database migration at `supabase/migrations/20261018000100_client_portal_schema_rls.sql` to the intended Supabase project. See [supabase/README.md](supabase/README.md) for the SQL Editor steps and administrator promotion instructions.
+3. Apply `supabase/migrations/20261018000100_client_portal_schema_rls.sql`, then apply `supabase/migrations/20261018000200_project_files.sql` to the intended Supabase project. The second migration adds private storage and project file access policies. See [supabase/README.md](supabase/README.md) for the SQL Editor steps and administrator promotion instructions.
 4. Start the development server with `npm run dev` and open the local URL printed by Vite.
 
 ## Commands

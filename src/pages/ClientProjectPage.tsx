@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ProgressBar from '../components/ProgressBar'
+import ProjectFilesSection from '../components/ProjectFilesSection'
 import StatusBadge from '../components/StatusBadge'
 import { fetchClientProjectDetails, type ClientProjectDetails } from '../lib/clientProjects'
 import { supabase } from '../lib/supabase'
@@ -86,6 +87,7 @@ export default function ClientProjectPage() {
         <div className="relative mt-6 max-w-sm rounded-xl border border-white/10 bg-black/10 p-4"><ProgressBar approved={approvedCount} total={details.milestones.length} /></div>
       </header>
       {actionError && <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{actionError}</p>}
+      <ProjectFilesSection projectId={details.project.id} />
       <div className="space-y-4">
         <div><h2 className="text-lg font-semibold tracking-tight text-[#e0e9e2]">Milestone timeline</h2><p className="mt-1 text-xs text-[#aab8ad]">A shared view of what’s done and what’s next.</p></div>
         {details.milestones.length === 0 && <p className="rounded-2xl border border-dashed border-[#223127] bg-[#141D17] p-8 text-center text-sm text-[#aab8ad]">No milestones have been added yet.</p>}

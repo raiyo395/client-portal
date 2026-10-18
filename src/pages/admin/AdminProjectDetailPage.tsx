@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import StatusBadge from '../../components/StatusBadge'
+import ProjectFilesSection from '../../components/ProjectFilesSection'
 import { fetchAdminProjectDetails, type AdminProjectDetails, type MilestoneWithApprovals } from '../../lib/adminProjectDetails'
 import { supabase } from '../../lib/supabase'
 import type { Project } from '../../types'
@@ -118,6 +119,8 @@ export default function AdminProjectDetailPage() {
       </div>
 
       {actionError && <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{actionError}</p>}
+
+      <ProjectFilesSection projectId={details.project.id} />
 
       <form onSubmit={addMilestone} className="rounded-2xl border border-[#223127] bg-[#141D17] p-5 sm:p-6">
         <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#aab8ad]">Keep things moving</p><h2 className="mt-1 text-lg font-semibold text-[#e0e9e2]">Add a milestone</h2></div><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#141D17] text-lg text-[#b7d39f]">＋</span></div>

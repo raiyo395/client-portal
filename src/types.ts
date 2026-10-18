@@ -33,3 +33,14 @@ export type Approval = {
   comment: string | null
   created_at: string
 }
+
+export type ProjectFile = {
+  id: string
+  project_id: string
+  uploaded_by: string
+  file_name: string
+  storage_path: string
+  size_bytes: number
+  mime_type: string | null
+  created_at: string
+}

@@ -7,6 +7,7 @@ import AdminProjectsPage from './pages/admin/AdminProjectsPage'
 import AdminProjectDetailPage from './pages/admin/AdminProjectDetailPage'
 import ClientProjectsPage from './pages/ClientProjectsPage'
 import ClientProjectPage from './pages/ClientProjectPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
 

@@ -7,9 +7,10 @@ type AuthContextValue = {
   session: Session | null
   profile: Profile | null
   loading: boolean
+  retryProfile: () => void
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string, fullName: string) => Promise<string | null>
-  signOut: () => Promise<void>
+  signOut: () => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -18,6 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileRetryCount, setProfileRetryCount] = useState(0)
 
   // Track the Supabase session
   useEffect(() => {
@@ -72,7 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, profileRetryCount])
+
+  const retryProfile = () => {
+    setLoading(true)
+    setProfileRetryCount((count) => count + 1)
+  }
 
   const signIn: AuthContextValue['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -89,11 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    return error?.message ?? null
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ session, profile, loading, retryProfile, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import ProgressBar from '../components/ProgressBar'
 import StatusBadge from '../components/StatusBadge'
 import { fetchClientProjectDetails, type ClientProjectDetails } from '../lib/clientProjects'
 import { supabase } from '../lib/supabase'
@@ -38,6 +39,11 @@ export default function ClientProjectPage() {
   }, [id])
 
   async function submitDecision(milestoneId: string, decision: Approval['decision']) {
+    const milestone = details?.milestones.find((item) => item.id === milestoneId)
+    if (!milestone || milestone.status !== 'in_review') {
+      setActionError('This milestone is no longer awaiting review. Refresh the page to see its latest status.')
+      return
+    }
     const comment = comments[milestoneId]?.trim() ?? ''
     if (decision === 'changes_requested' && !comment) {
       setActionError('Please add a comment when requesting changes.')
@@ -45,19 +51,26 @@ export default function ClientProjectPage() {
     }
     setActionError(null)
     setSubmittingId(milestoneId)
-    const { error: insertError } = await supabase.from('approvals').insert({
-      milestone_id: milestoneId,
-      decision,
-      comment: comment || null,
-    })
-    setSubmittingId(null)
-    if (insertError) {
-      setActionError(`Could not submit your decision: ${insertError.message}`)
-      return
+    try {
+      const { error: insertError } = await supabase.from('approvals').insert({
+        milestone_id: milestoneId,
+        decision,
+        comment: comment || null,
+      })
+      if (insertError) {
+        setActionError('We couldn’t save this decision. The milestone may already have a decision or may no longer be in review. Refresh the page to see its latest status.')
+        return
+      }
+      setComments((current) => ({ ...current, [milestoneId]: '' }))
+      await load()
+    } catch (caught) {
+      setActionError(caught instanceof Error ? `We couldn’t save this decision: ${caught.message}` : 'We couldn’t save this decision. Please try again.')
+    } finally {
+      setSubmittingId(null)
     }
-    setComments((current) => ({ ...current, [milestoneId]: '' }))
-    await load()
   }
+
+  const approvedCount = details?.milestones.filter((milestone) => milestone.status === 'approved').length ?? 0
 
   if (loading) return <p className="rounded-2xl border border-[#223127] bg-[#141D17] p-6 text-sm text-[#aab8ad]">Loading project…</p>
   if (error) return <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-4 text-sm text-[#e0a182]">Could not load project: {error}</p>
@@ -70,6 +83,7 @@ export default function ClientProjectPage() {
         <Link to="/projects" className="relative text-xs font-semibold text-[#d1dfd1] hover:text-white">← Your projects</Link>
         <div className="relative mt-5 flex flex-wrap items-center gap-3"><h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{details.project.name}</h1><StatusBadge status={details.project.status} /></div>
         <p className="relative mt-3 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-[#d0ddd3]">{details.project.description || 'No project description.'}</p>
+        <div className="relative mt-6 max-w-sm rounded-xl border border-white/10 bg-black/10 p-4"><ProgressBar approved={approvedCount} total={details.milestones.length} /></div>
       </header>
       {actionError && <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{actionError}</p>}
       <div className="space-y-4">
@@ -82,14 +96,15 @@ export default function ClientProjectPage() {
             {milestone.due_date && <p className="mt-2 text-xs font-medium text-[#9aa99e]">Due {new Date(`${milestone.due_date}T00:00:00`).toLocaleDateString()}</p>}
             {milestone.description && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#aab8ad]">{milestone.description}</p>}
 
-            {milestone.status === 'in_review' && <div className="mt-5 rounded-2xl border border-[#223127] bg-[#141D17] p-4 sm:p-5">
+            <div className="mt-5 rounded-2xl border border-[#223127] bg-[#141D17] p-4 sm:p-5">
               <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#b7d39f]">Your review</p>
+              {milestone.status !== 'in_review' && <p className="mt-2 text-sm text-[#9aa99e]">Review actions become available when this milestone is in review.</p>}
               <label className="mt-3 block space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Comment <span className="font-normal text-[#9aa99e]">· required to request changes</span>
-                <textarea rows={3} value={comments[milestone.id] ?? ''} onChange={(event) => setComments((current) => ({ ...current, [milestone.id]: event.target.value }))} placeholder="Share a note for the project team" className="portal-input resize-y bg-[#141D17]" />
+                <textarea rows={3} disabled={milestone.status !== 'in_review' || submittingId !== null} value={comments[milestone.id] ?? ''} onChange={(event) => setComments((current) => ({ ...current, [milestone.id]: event.target.value }))} placeholder="Share a note for the project team" className="portal-input resize-y bg-[#141D17] disabled:cursor-not-allowed disabled:opacity-50" />
               </label>
-              <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={submittingId === milestone.id} onClick={() => void submitDecision(milestone.id, 'approved')} className="rounded-xl bg-[#416c4b] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#355c3e] disabled:opacity-50">{submittingId === milestone.id ? 'Submitting…' : 'Approve'} <span aria-hidden="true">✓</span></button>
-                <button type="button" disabled={submittingId === milestone.id} onClick={() => void submitDecision(milestone.id, 'changes_requested')} className="rounded-xl border border-[#594535] bg-[#141D17] px-4 py-2.5 text-sm font-semibold text-[#e0a182] transition hover:bg-[#3a2e20] disabled:opacity-50">Request changes</button></div>
-            </div>}
+              <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={submittingId !== null || milestone.status !== 'in_review'} onClick={() => void submitDecision(milestone.id, 'approved')} className="rounded-xl bg-[#416c4b] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#355c3e] disabled:cursor-not-allowed disabled:opacity-50">{submittingId === milestone.id ? 'Submitting…' : 'Approve'} <span aria-hidden="true">✓</span></button>
+                <button type="button" disabled={submittingId !== null || milestone.status !== 'in_review'} onClick={() => void submitDecision(milestone.id, 'changes_requested')} className="rounded-xl border border-[#594535] bg-[#141D17] px-4 py-2.5 text-sm font-semibold text-[#e0a182] transition hover:bg-[#3a2e20] disabled:cursor-not-allowed disabled:opacity-50">{submittingId === milestone.id ? 'Submitting…' : 'Request changes'}</button></div>
+            </div>
 
             <div className="mt-5 border-t border-[#223127] pt-4"><h4 className="text-xs font-bold uppercase tracking-[0.13em] text-[#aab8ad]">Past decisions</h4>
               {milestone.approvals.length === 0 ? <p className="mt-2 text-sm text-[#9aa99e]">No decisions yet.</p> : <ol className="mt-3 space-y-3">{milestone.approvals.map((approval) => (

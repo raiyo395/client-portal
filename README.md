@@ -1,75 +1,43 @@
-# React + TypeScript + Vite
+# Client Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A shared workspace where clients and administrators can follow project milestones, review completed work, and keep approval decisions together.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Role-based client and administrator workspaces
+- Project and milestone tracking with progress summaries
+- Client approval and change-request workflow
+- Approval history attached to each milestone
+- Supabase authentication and row-level security
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 and TypeScript
+- Vite
+- Tailwind CSS v4
+- React Router v7
+- Supabase Auth, Postgres, and Row Level Security
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Install dependencies with `npm install`.
+2. Create `.env.local` in the repository root with the Supabase project URL and publishable key:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+   ```env
+   VITE_SUPABASE_URL=
+   VITE_SUPABASE_PUBLISHABLE_KEY=
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+   Copy these values from the Supabase project settings. These are browser-safe project settings; never put a service-role key in this app.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. Apply the database migration at `supabase/migrations/20261018000100_client_portal_schema_rls.sql` to the intended Supabase project. See [supabase/README.md](supabase/README.md) for the SQL Editor steps and administrator promotion instructions.
+4. Start the development server with `npm run dev` and open the local URL printed by Vite.
 
-```
+## Commands
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+- `npm run dev` — start the local development server
+- `npm run lint` — run ESLint
+- `npx tsc --noEmit` — check TypeScript types
+- `npm run build` — create a production build
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+New accounts receive the `client` role. A trusted project operator must promote administrator accounts in Supabase as described in the database setup guide.

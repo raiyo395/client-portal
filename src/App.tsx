@@ -1,43 +1,48 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import Login from './pages/Login'
-import AdminProjectsPage from './pages/admin/AdminProjectsPage'
-import AdminProjectDetailPage from './pages/admin/AdminProjectDetailPage'
-import ClientProjectsPage from './pages/ClientProjectsPage'
-import ClientProjectPage from './pages/ClientProjectPage'
-import NotFoundPage from './pages/NotFoundPage'
+import LoadingSpinner from './components/LoadingSpinner'
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Login = lazy(() => import('./pages/Login'))
+const AdminProjectsPage = lazy(() => import('./pages/admin/AdminProjectsPage'))
+const AdminProjectDetailPage = lazy(() => import('./pages/admin/AdminProjectDetailPage'))
+const ClientProjectsPage = lazy(() => import('./pages/ClientProjectsPage'))
+const ClientProjectPage = lazy(() => import('./pages/ClientProjectPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/login" element={<Login />} />
 
-      {/* Any logged-in user */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="*" element={<NotFoundPage />} />
+        {/* Any logged-in user */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      {/* Client area */}
-      <Route element={<ProtectedRoute clientOnly />}>
-        <Route element={<Layout />}>
-          <Route path="/projects" element={<ClientProjectsPage />} />
-          <Route path="/projects/:id" element={<ClientProjectPage />} />
+        {/* Client area */}
+        <Route element={<ProtectedRoute clientOnly />}>
+          <Route element={<Layout />}>
+            <Route path="/projects" element={<ClientProjectsPage />} />
+            <Route path="/projects/:id" element={<ClientProjectPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      {/* Admin-only area */}
-      <Route element={<ProtectedRoute adminOnly />}>
-        <Route element={<Layout />}>
-          <Route path="/admin" element={<Navigate to="/admin/projects" replace />} />
-          <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
-          <Route path="/admin/projects" element={<AdminProjectsPage />} />
+        {/* Admin-only area */}
+        <Route element={<ProtectedRoute adminOnly />}>
+          <Route element={<Layout />}>
+            <Route path="/admin" element={<Navigate to="/admin/projects" replace />} />
+            <Route path="/admin/projects/:id" element={<AdminProjectDetailPage />} />
+            <Route path="/admin/projects" element={<AdminProjectsPage />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   )
 }

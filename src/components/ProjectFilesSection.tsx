@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { fetchProjectFiles, type ProjectFileWithUploader } from '../lib/projectFiles'
-import FileList from './FileList'
-import FileUploader from './FileUploader'
+import { reportActionError } from '../lib/actionFeedback'
+import LoadingSpinner from './LoadingSpinner'
+
+const FileList = lazy(() => import('./FileList'))
+const FileUploader = lazy(() => import('./FileUploader'))
 
 export default function ProjectFilesSection({ projectId }: { projectId: string }) {
   const { profile } = useAuth()
@@ -17,7 +20,7 @@ export default function ProjectFilesSection({ projectId }: { projectId: string }
     try {
       setFiles(await fetchProjectFiles(projectId, profile.id))
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+      setError(reportActionError('Load project files', caught))
     } finally {
       setLoading(false)
     }
@@ -29,7 +32,7 @@ export default function ProjectFilesSection({ projectId }: { projectId: string }
     void fetchProjectFiles(projectId, profile.id)
       .then((rows) => { if (!cancelled) { setFiles(rows); setError(null) } })
       .catch((caught: unknown) => {
-        if (!cancelled) setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+        if (!cancelled) setError(reportActionError('Load project files', caught))
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -39,8 +42,10 @@ export default function ProjectFilesSection({ projectId }: { projectId: string }
 
   return (
     <section className="space-y-4">
-      <FileUploader projectId={projectId} userId={profile.id} onUploaded={load} />
-      <FileList files={files} viewerId={profile.id} isAdmin={profile.role === 'admin'} loading={loading} error={error} onRetry={load} onDeleted={load} />
+      <Suspense fallback={<LoadingSpinner />}>
+        <FileUploader projectId={projectId} userId={profile.id} onUploaded={load} />
+        <FileList files={files} viewerId={profile.id} isAdmin={profile.role === 'admin'} loading={loading} error={error} onRetry={load} onDeleted={load} />
+      </Suspense>
     </section>
   )
 }

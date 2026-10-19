@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { deleteProjectFile, downloadProjectFile, formatFileSize, type ProjectFileWithUploader } from '../lib/projectFiles'
+import { debugAction, reportActionError } from '../lib/actionFeedback'
 
 type FileListProps = {
   files: ProjectFileWithUploader[]
@@ -17,18 +18,20 @@ export default function FileList({ files, viewerId, isAdmin, loading, error, onR
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function download(file: ProjectFileWithUploader) {
+    debugAction('download project file', { project_file_id: file.id, file_name: file.file_name })
     setActionError(null)
     setDownloadingId(file.id)
     try {
       await downloadProjectFile(file)
     } catch (caught) {
-      setActionError(caught instanceof Error ? `Could not download ${file.file_name}: ${caught.message}` : `Could not download ${file.file_name}.`)
+      setActionError(`Could not download ${file.file_name}: ${reportActionError('Download project file', caught)}`)
     } finally {
       setDownloadingId(null)
     }
   }
 
   async function remove(file: ProjectFileWithUploader) {
+    debugAction('delete project file', { project_file_id: file.id, file_name: file.file_name })
     if (!window.confirm(`Delete “${file.file_name}” from this project?`)) return
     setActionError(null)
     setDeletingId(file.id)
@@ -36,10 +39,15 @@ export default function FileList({ files, viewerId, isAdmin, loading, error, onR
       await deleteProjectFile(file)
       await onDeleted()
     } catch (caught) {
-      setActionError(caught instanceof Error ? caught.message : 'Could not delete this file.')
+      setActionError(`Could not delete ${file.file_name}: ${reportActionError('Delete project file', caught)}`)
     } finally {
       setDeletingId(null)
     }
+  }
+
+  function retry() {
+    debugAction('retry project file list')
+    void onRetry()
   }
 
   return (
@@ -47,7 +55,7 @@ export default function FileList({ files, viewerId, isAdmin, loading, error, onR
       <div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-semibold text-[#e0e9e2]">Shared files</h2><p className="mt-1 text-sm text-[#aab8ad]">Files stored privately for this project.</p></div>{!loading && !error && <span className="rounded-full bg-[#223127] px-3 py-1 text-xs text-[#b7d39f]">{files.length} {files.length === 1 ? 'file' : 'files'}</span>}</div>
       {actionError && <p role="alert" className="mt-4 rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{actionError}</p>}
       {loading && <p className="mt-4 rounded-xl bg-[#070B08] p-4 text-sm text-[#aab8ad]">Loading project files…</p>}
-      {!loading && error && <div role="alert" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#56382d] bg-[#39251f] p-4 text-sm text-[#e0a182]"><span>Could not load project files: {error}</span><button type="button" onClick={onRetry} className="rounded-lg border border-[#8f604a] px-3 py-2 font-semibold">Retry</button></div>}
+      {!loading && error && <div role="alert" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#56382d] bg-[#39251f] p-4 text-sm text-[#e0a182]"><span>Could not load project files: {error}</span><button type="button" onClick={retry} className="rounded-lg border border-[#8f604a] px-3 py-2 font-semibold">Retry</button></div>}
       {!loading && !error && files.length === 0 && <p className="mt-4 rounded-xl border border-dashed border-[#35473a] p-6 text-center text-sm text-[#9aa99e]">No files have been shared on this project yet.</p>}
       {!loading && !error && files.length > 0 && <ul className="mt-4 divide-y divide-[#223127]">{files.map((file) => {
         const canDelete = isAdmin || file.uploaded_by === viewerId

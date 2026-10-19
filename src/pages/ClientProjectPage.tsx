@@ -4,6 +4,7 @@ import ProgressBar from '../components/ProgressBar'
 import ProjectFilesSection from '../components/ProjectFilesSection'
 import StatusBadge from '../components/StatusBadge'
 import { fetchClientProjectDetails, type ClientProjectDetails } from '../lib/clientProjects'
+import { debugAction, reportActionError } from '../lib/actionFeedback'
 import { supabase } from '../lib/supabase'
 import type { Approval } from '../types'
 
@@ -14,6 +15,7 @@ export default function ClientProjectPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null)
   const [submittingId, setSubmittingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -22,7 +24,7 @@ export default function ClientProjectPage() {
     try {
       setDetails(await fetchClientProjectDetails(id))
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+      setError(reportActionError('Load client project details', caught))
     } finally {
       setLoading(false)
     }
@@ -33,16 +35,18 @@ export default function ClientProjectPage() {
     void fetchClientProjectDetails(id)
       .then((result) => { if (!cancelled) setDetails(result) })
       .catch((caught: unknown) => {
-        if (!cancelled) setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+        if (!cancelled) setError(reportActionError('Load client project details', caught))
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [id])
 
   async function submitDecision(milestoneId: string, decision: Approval['decision']) {
+    debugAction(decision === 'approved' ? 'approve milestone' : 'request milestone changes', { milestone_id: milestoneId, comment: comments[milestoneId] ?? '' })
     const milestone = details?.milestones.find((item) => item.id === milestoneId)
     if (!milestone || milestone.status !== 'in_review') {
-      setActionError('This milestone is no longer awaiting review. Refresh the page to see its latest status.')
+      await load()
+      setActionError('This milestone is no longer awaiting review. Its latest status has been refreshed.')
       return
     }
     const comment = comments[milestoneId]?.trim() ?? ''
@@ -51,6 +55,7 @@ export default function ClientProjectPage() {
       return
     }
     setActionError(null)
+    setActionSuccess(null)
     setSubmittingId(milestoneId)
     try {
       const { error: insertError } = await supabase.from('approvals').insert({
@@ -59,13 +64,16 @@ export default function ClientProjectPage() {
         comment: comment || null,
       })
       if (insertError) {
-        setActionError('We couldn’t save this decision. The milestone may already have a decision or may no longer be in review. Refresh the page to see its latest status.')
+        const errorMessage = reportActionError('Submit milestone decision', insertError)
+        await load()
+        setActionError(`We couldn’t save this decision: ${errorMessage}. The milestone may already have a decision or may no longer be in review. Its latest status has been refreshed.`)
         return
       }
       setComments((current) => ({ ...current, [milestoneId]: '' }))
       await load()
+      setActionSuccess(decision === 'approved' ? 'Milestone approved.' : 'Changes requested.')
     } catch (caught) {
-      setActionError(caught instanceof Error ? `We couldn’t save this decision: ${caught.message}` : 'We couldn’t save this decision. Please try again.')
+      setActionError(`We couldn’t save this decision: ${reportActionError('Submit milestone decision', caught)}`)
     } finally {
       setSubmittingId(null)
     }
@@ -87,6 +95,7 @@ export default function ClientProjectPage() {
         <div className="relative mt-6 max-w-sm rounded-xl border border-white/10 bg-black/10 p-4"><ProgressBar approved={approvedCount} total={details.milestones.length} /></div>
       </header>
       {actionError && <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{actionError}</p>}
+      {actionSuccess && <p role="status" className="rounded-xl border border-[#3e5640] bg-[#141D17] p-3 text-sm text-[#b6d59f]">{actionSuccess}</p>}
       <ProjectFilesSection projectId={details.project.id} />
       <div className="space-y-4">
         <div><h2 className="text-lg font-semibold tracking-tight text-[#e0e9e2]">Milestone timeline</h2><p className="mt-1 text-xs text-[#aab8ad]">A shared view of what’s done and what’s next.</p></div>

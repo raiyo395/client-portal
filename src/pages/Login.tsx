@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { debugAction, reportActionError } from '../lib/actionFeedback'
 
 export default function Login() {
   const { session, signIn, signUp } = useAuth()
@@ -15,6 +16,7 @@ export default function Login() {
   if (session) return <Navigate to="/" replace />
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    debugAction(mode === 'login' ? 'sign in' : 'sign up', { email, full_name: mode === 'signup' ? fullName.trim() : undefined })
     event.preventDefault()
     setError(null)
     setInfo(null)
@@ -29,10 +31,18 @@ export default function Login() {
         setMode('login')
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'We couldn’t complete that request. Please try again.')
+      setError(reportActionError(mode === 'login' ? 'Sign in' : 'Sign up', caught))
     } finally {
       setSubmitting(false)
     }
+  }
+
+  function toggleMode() {
+    const nextMode = mode === 'login' ? 'signup' : 'login'
+    debugAction('switch sign-in mode', { next_mode: nextMode })
+    setMode(nextMode)
+    setError(null)
+    setInfo(null)
   }
 
   return (
@@ -63,7 +73,7 @@ export default function Login() {
             {error && <p role="alert" className="mt-4 rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{error}</p>}
             {info && <p role="status" className="mt-4 rounded-xl border border-[#3e5640] bg-[#141D17] p-3 text-sm text-[#b6d59f]">{info}</p>}
             <button type="submit" disabled={submitting} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#203d30] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2a4c3a] disabled:cursor-not-allowed disabled:opacity-50">{submitting ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}<span aria-hidden="true">→</span></button>
-            <p className="mt-6 text-center text-sm text-[#aab8ad]">{mode === 'login' ? 'New to the portal?' : 'Already have an account?'} <button type="button" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setInfo(null) }} className="font-semibold text-[#b7d39f] underline decoration-[#a6c191] underline-offset-4 hover:text-[#d6e3d8]">{mode === 'login' ? 'Create an account' : 'Sign in instead'}</button></p>
+            <p className="mt-6 text-center text-sm text-[#aab8ad]">{mode === 'login' ? 'New to the portal?' : 'Already have an account?'} <button type="button" onClick={toggleMode} className="font-semibold text-[#b7d39f] underline decoration-[#a6c191] underline-offset-4 hover:text-[#d6e3d8]">{mode === 'login' ? 'Create an account' : 'Sign in instead'}</button></p>
           </form>
         </section>
       </div>

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { reportActionError } from './actionFeedback'
 import type { Profile, ProjectFile } from '../types'
 
 export const MAX_PROJECT_FILE_SIZE = 10 * 1024 * 1024
@@ -65,7 +66,7 @@ export async function uploadProjectFile(file: File, projectId: string, userId: s
     contentType: mimeType,
     upsert: false,
   })
-  if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`)
+  if (uploadError) throw new Error(`Storage upload failed: ${reportActionError('Upload project file to storage', uploadError)}`)
 
   const { error: insertError } = await supabase.from('project_files').insert({
     project_id: projectId,
@@ -76,12 +77,14 @@ export async function uploadProjectFile(file: File, projectId: string, userId: s
     mime_type: mimeType,
   })
   if (!insertError) return
+  const insertMessage = reportActionError('Save project file record', insertError)
 
   const { error: cleanupError } = await supabase.storage.from('project-files').remove([storagePath])
   if (cleanupError) {
-    throw new Error(`Could not save file details: ${insertError.message}. The uploaded object could not be removed: ${cleanupError.message}`)
+    const cleanupMessage = reportActionError('Clean up untracked project file', cleanupError)
+    throw new Error(`Could not save file details: ${insertMessage}. The uploaded object could not be removed: ${cleanupMessage}`)
   }
-  throw new Error(`Could not save file details: ${insertError.message}. The uploaded object was removed.`)
+  throw new Error(`Could not save file details: ${insertMessage}. The uploaded object was removed.`)
 }
 
 export async function downloadProjectFile(file: ProjectFile): Promise<void> {
@@ -93,10 +96,10 @@ export async function downloadProjectFile(file: ProjectFile): Promise<void> {
 
 export async function deleteProjectFile(file: ProjectFile): Promise<void> {
   const { error: storageError } = await supabase.storage.from('project-files').remove([file.storage_path])
-  if (storageError) throw new Error(`Could not remove the stored file: ${storageError.message}`)
+  if (storageError) throw storageError
 
   const { error: rowError } = await supabase.from('project_files').delete().eq('id', file.id)
-  if (rowError) throw new Error(`The stored file was removed, but its file record could not be deleted: ${rowError.message}`)
+  if (rowError) throw new Error(`The stored file was removed, but its file record could not be deleted: ${reportActionError('Delete project file record', rowError)}`)
 }
 
 export function formatFileSize(sizeBytes: number): string {

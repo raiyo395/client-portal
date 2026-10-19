@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { reportActionError } from '../lib/actionFeedback'
 import type { Profile } from '../types'
 
 type AuthContextValue = {
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(
       ({ data, error }) => {
         if (error) {
+          reportActionError('Restore auth session', error)
           setProfile(null)
           setLoading(false)
           return
@@ -33,7 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(data.session)
         if (!data.session) setLoading(false)
       },
-      () => setLoading(false),
+      (caught: unknown) => {
+        reportActionError('Restore auth session', caught)
+        setLoading(false)
+      },
     )
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -62,11 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(
         ({ data, error }) => {
           if (cancelled) return
+          if (error) reportActionError('Load account profile', error)
           setProfile(error ? null : (data as Profile | null) ?? null)
           setLoading(false)
         },
-        () => {
+        (caught: unknown) => {
           if (cancelled) return
+          reportActionError('Load account profile', caught)
           setProfile(null)
           setLoading(false)
         },
@@ -83,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn: AuthContextValue['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return error?.message ?? null
+    return error ? reportActionError('Sign in', error) : null
   }
 
   const signUp: AuthContextValue['signUp'] = async (email, password, fullName) => {
@@ -92,12 +99,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { data: { full_name: fullName } },
     })
-    return error?.message ?? null
+    return error ? reportActionError('Sign up', error) : null
   }
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
-    return error?.message ?? null
+    return error ? reportActionError('Sign out', error) : null
   }
 
   return (

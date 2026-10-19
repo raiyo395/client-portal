@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { PROJECT_FILE_ACCEPT, uploadProjectFile, validateProjectFile } from '../lib/projectFiles'
+import { debugAction, reportActionError } from '../lib/actionFeedback'
 
 type FileUploaderProps = {
   projectId: string
@@ -15,6 +16,7 @@ export default function FileUploader({ projectId, userId, onUploaded }: FileUplo
 
   async function handleFiles(fileList: FileList | File[]) {
     const candidates = Array.from(fileList)
+    debugAction('upload project files', candidates.map((file) => ({ name: file.name, size: file.size, type: file.type })))
     const validFiles: File[] = []
     const nextErrors: string[] = []
     for (const file of candidates) {
@@ -31,7 +33,7 @@ export default function FileUploader({ projectId, userId, onUploaded }: FileUplo
         await uploadProjectFile(file, projectId, userId)
         await onUploaded()
       } catch (caught) {
-        const message = caught instanceof Error ? caught.message : 'An unexpected error occurred.'
+        const message = reportActionError('Upload project file', caught)
         setErrors((current) => [...current, `${file.name}: ${message}`])
       } finally {
         setUploadingFiles((current) => current.filter((item) => item.id !== id))
@@ -43,6 +45,11 @@ export default function FileUploader({ projectId, userId, onUploaded }: FileUplo
     const selected = event.currentTarget.files
     if (selected?.length) void handleFiles(selected)
     event.currentTarget.value = ''
+  }
+
+  function openFilePicker() {
+    debugAction('open project file picker', { project_id: projectId })
+    inputRef.current?.click()
   }
 
   function onDrop(event: DragEvent<HTMLDivElement>) {
@@ -57,7 +64,7 @@ export default function FileUploader({ projectId, userId, onUploaded }: FileUplo
     <section aria-label="Upload project files" className={`rounded-2xl border bg-[#141D17] p-5 transition-colors sm:p-6 ${dragging ? 'border-[#9bbc82] bg-[#19251c]' : 'border-[#223127]'}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true) }} onDragOver={(event) => event.preventDefault()} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false) }} onDrop={onDrop}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><h2 className="text-base font-semibold text-[#e0e9e2]">Project files</h2><p className="mt-1 text-sm text-[#aab8ad]">Share PDFs, images, Office files, ZIPs, and text files up to 10 MB.</p></div>
-        <button type="button" onClick={() => inputRef.current?.click()} disabled={busy} className="rounded-xl bg-[#203d30] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2a4c3a] disabled:cursor-wait disabled:opacity-50">{busy ? 'Uploading…' : 'Choose files'}</button>
+        <button type="button" onClick={openFilePicker} disabled={busy} className="rounded-xl bg-[#203d30] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2a4c3a] disabled:cursor-wait disabled:opacity-50">{busy ? 'Uploading…' : 'Choose files'}</button>
         <input ref={inputRef} className="sr-only" type="file" accept={PROJECT_FILE_ACCEPT} multiple onChange={onFileInput} />
       </div>
       <p className="mt-4 rounded-xl border border-dashed border-[#35473a] px-4 py-5 text-center text-xs text-[#9aa99e]">Or drag and drop files here</p>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ProgressBar from '../../components/ProgressBar'
 import StatusBadge from '../../components/StatusBadge'
 import { createAdminProject, fetchAdminProjects, fetchClientProfiles, type AdminProjectRow } from '../../lib/adminProjects'
+import { debugAction, reportActionError } from '../../lib/actionFeedback'
 import type { Profile } from '../../types'
 
 type ClientOption = Pick<Profile, 'id' | 'full_name'>
@@ -14,6 +15,7 @@ export default function AdminProjectsPage() {
   const [clientsLoading, setClientsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [clientLoadError, setClientLoadError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [name, setName] = useState('')
@@ -26,7 +28,7 @@ export default function AdminProjectsPage() {
     try {
       setProjects(await fetchAdminProjects())
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+      setError(reportActionError('Load projects', caught))
     } finally {
       setLoading(false)
     }
@@ -37,19 +39,20 @@ export default function AdminProjectsPage() {
     void fetchClientProfiles()
       .then((profiles) => { if (!cancelled) setClients(profiles) })
       .catch((caught: unknown) => {
-        if (!cancelled) setFormError(caught instanceof Error ? `Could not load clients: ${caught.message}` : 'Could not load clients.')
+        if (!cancelled) setClientLoadError(reportActionError('Load client profiles', caught))
       })
       .finally(() => { if (!cancelled) setClientsLoading(false) })
     void fetchAdminProjects()
       .then((rows) => { if (!cancelled) setProjects(rows) })
       .catch((caught: unknown) => {
-        if (!cancelled) setError(caught instanceof Error ? caught.message : 'An unexpected error occurred.')
+        if (!cancelled) setError(reportActionError('Load projects', caught))
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [loadProjects])
 
   async function createProject(event: FormEvent<HTMLFormElement>) {
+    debugAction('add project', { name, description, client_id: clientId })
     event.preventDefault()
     setFormError(null)
     setSuccess(null)
@@ -65,9 +68,22 @@ export default function AdminProjectsPage() {
       setSuccess('Project created successfully.')
       await loadProjects()
     } catch (caught) {
-      setFormError(`Could not create project: ${caught instanceof Error ? caught.message : 'Network request failed.'}`)
+      setFormError(`Could not create project: ${reportActionError('Create project', caught)}`)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function retryClientProfiles() {
+    debugAction('retry client profile list')
+    setClientsLoading(true)
+    setClientLoadError(null)
+    try {
+      setClients(await fetchClientProfiles())
+    } catch (caught) {
+      setClientLoadError(reportActionError('Load client profiles', caught))
+    } finally {
+      setClientsLoading(false)
     }
   }
 
@@ -111,9 +127,10 @@ export default function AdminProjectsPage() {
             <div className="border-b border-[#223127] px-5 py-5 sm:px-6"><div className="flex items-center justify-between"><div className="grid h-9 w-9 place-items-center rounded-xl bg-[#141D17] text-lg text-[#b7d39f]">＋</div><span className="rounded-full bg-[#354631] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#b7d39f]">Quick create</span></div><h2 className="mt-4 text-lg font-semibold tracking-tight text-[#e0e9e2]">Start a project</h2><p className="mt-1 text-xs leading-5 text-[#aab8ad]">Set up a new client workspace in a few details.</p></div>
             <div className="space-y-4 px-5 py-5 sm:px-6">
               <label className="block space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Project name<input required maxLength={160} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Brand refresh" className="portal-input" /></label>
-              <label className="block space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Client<select required value={clientId} onChange={(event) => setClientId(event.target.value)} disabled={clientsLoading || clients.length === 0} className="portal-input disabled:cursor-not-allowed disabled:bg-[#141D17]">{clients.map((client) => <option key={client.id} value={client.id}>{client.full_name || 'Unnamed client'}</option>)}<option value="">{clientsLoading ? 'Loading clients…' : clients.length === 0 ? 'No clients available' : 'Choose a client'}</option></select></label>
+              <label className="block space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Client<select required value={clientId} onChange={(event) => setClientId(event.target.value)} disabled={clientsLoading || Boolean(clientLoadError) || clients.length === 0} className="portal-input disabled:cursor-not-allowed disabled:bg-[#141D17]"><option value="">{clientsLoading ? 'Loading clients…' : clientLoadError ? 'Could not load clients' : clients.length === 0 ? 'No clients available' : 'Choose a client'}</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.full_name || 'Unnamed client'}</option>)}</select></label>
               <label className="block space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Description <span className="font-normal text-[#9aa99e]">· optional</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What are you working on together?" className="portal-input resize-y" /></label>
-              {!clientsLoading && clients.length === 0 && !formError && <p className="text-xs leading-5 text-[#e5c678]">No client profiles are available yet. Add a client account first.</p>}
+              {clientLoadError && <div role="alert" className="rounded-lg border border-[#56382d] bg-[#39251f] p-3 text-xs leading-5 text-[#e0a182]"><p>Could not load clients: {clientLoadError}</p><button type="button" onClick={() => void retryClientProfiles()} disabled={clientsLoading} className="mt-2 rounded-md border border-[#8f604a] px-2.5 py-1.5 font-semibold disabled:opacity-50">{clientsLoading ? 'Loading clients…' : 'Retry client list'}</button></div>}
+              {!clientsLoading && !clientLoadError && clients.length === 0 && <p className="text-xs leading-5 text-[#e5c678]">No clients yet. Ask a client to sign up first.</p>}
               {formError && <p role="alert" className="rounded-lg border border-[#56382d] bg-[#39251f] p-3 text-xs leading-5 text-[#e0a182]">{formError}</p>}
               {success && <p role="status" className="rounded-lg border border-[#3e5640] bg-[#141D17] p-3 text-xs text-[#b6d59f]">{success}</p>}
               <button type="submit" disabled={saving || clientsLoading || clients.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#203d30] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2a4c3a] disabled:cursor-not-allowed disabled:opacity-50">{saving ? 'Creating project…' : 'Create project'}<span aria-hidden="true">→</span></button>

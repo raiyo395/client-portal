@@ -12,11 +12,7 @@ export async function createAdminProject(input: NewProjectInput): Promise<string
     description: input.description,
     status: 'active',
   }).select('id').single()
-  if (error) {
-    const details = [error.code ? `Code: ${error.code}` : '', error.details, error.hint ? `Hint: ${error.hint}` : '']
-      .filter(Boolean).join(' ')
-    throw new Error(details ? `${error.message} ${details}` : error.message)
-  }
+  if (error) throw error
   if (!data?.id) throw new Error('The database accepted the request but did not return the new project ID.')
   return data.id as string
 }

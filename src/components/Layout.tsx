@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { debugAction, reportActionError } from '../lib/actionFeedback'
 
 function Mark() {
   return <span className="brand-mark grid h-9 w-9 place-items-center rounded-xl bg-[#c8ef8d] text-sm font-black tracking-tight text-[#19372d]">CP</span>
@@ -15,12 +17,28 @@ function NavIcon({ kind }: { kind: 'grid' | 'briefcase' }) {
 
 export default function Layout() {
   const { profile, session, signOut } = useAuth()
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [signOutError, setSignOutError] = useState<string | null>(null)
   const isAdmin = profile?.role === 'admin'
   const displayName = profile?.full_name?.trim() || session?.user.email || 'User'
   const initials = displayName.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U'
   const navItems = isAdmin
     ? [{ label: 'Overview', to: '/admin/projects', icon: 'grid' as const }]
     : [{ label: 'My projects', to: '/projects', icon: 'briefcase' as const }]
+
+  async function handleSignOut() {
+    debugAction('sign out', { user_id: session?.user.id })
+    setLoggingOut(true)
+    setSignOutError(null)
+    try {
+      const message = await signOut()
+      if (message) setSignOutError(message)
+    } catch (caught) {
+      setSignOutError(reportActionError('Sign out', caught))
+    } finally {
+      setLoggingOut(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#070B08] text-[#e0e9e2] md:flex">
@@ -40,7 +58,8 @@ export default function Layout() {
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#c8ef8d] text-xs font-semibold text-[#19372d]">{initials}</span>
             <span className="min-w-0"><span className="block truncate text-sm font-medium">{displayName}</span><span className="mt-0.5 block text-xs capitalize text-[#aebfb1]">{profile?.role ?? 'Member'}</span></span>
           </div>
-          <button type="button" onClick={() => void signOut()} className="mt-4 w-full rounded-lg border border-[#223127] px-3 py-2 text-left text-xs font-medium text-[#cfdbd2] transition hover:border-[#789082] hover:text-white">Log out <span aria-hidden="true" className="float-right">↗</span></button>
+          {signOutError && <p role="alert" className="mt-3 text-xs leading-5 text-[#e0a182]">Could not log out: {signOutError}</p>}
+          <button type="button" disabled={loggingOut} onClick={() => void handleSignOut()} className="mt-4 w-full rounded-lg border border-[#223127] px-3 py-2 text-left text-xs font-medium text-[#cfdbd2] transition hover:border-[#789082] hover:text-white disabled:cursor-wait disabled:opacity-50">{loggingOut ? 'Logging out…' : 'Log out'} <span aria-hidden="true" className="float-right">↗</span></button>
         </div>
       </aside>
 
@@ -48,8 +67,9 @@ export default function Layout() {
         <header className="border-b border-[#223127] bg-[#141D17] px-4 py-3.5 sm:px-7 md:hidden">
           <div className="flex items-center justify-between gap-3">
             <Link to="/" className="flex items-center gap-2.5"><Mark /><span className="text-sm font-semibold">Client Portal</span></Link>
-            <button type="button" onClick={() => void signOut()} className="rounded-lg border border-[#223127] px-3 py-2 text-xs font-medium text-[#c4d2c8]">Log out</button>
+            <button type="button" disabled={loggingOut} onClick={() => void handleSignOut()} className="rounded-lg border border-[#223127] px-3 py-2 text-xs font-medium text-[#c4d2c8] disabled:opacity-50">{loggingOut ? 'Logging out…' : 'Log out'}</button>
           </div>
+          {signOutError && <p role="alert" className="mt-2 text-xs text-[#e0a182]">Could not log out: {signOutError}</p>}
           <nav aria-label="Main navigation" className="mt-3 flex gap-2 overflow-x-auto">
             {navItems.map((item) => <NavLink key={item.to} to={item.to} end className={({ isActive }) => `whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-colors ${isActive ? 'bg-[#223127] text-[#c8ef8d]' : 'text-[#aab8ad] hover:bg-[#141D17]'}`}>{item.label}</NavLink>)}
           </nav>

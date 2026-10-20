@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import StatusBadge from '../../components/StatusBadge'
 import ProjectFilesSection from '../../components/ProjectFilesSection'
+import { Button, EmptyState, ErrorState, Skeleton } from '../../components/ui'
 import { fetchAdminProjectDetails, type AdminProjectDetails, type MilestoneWithApprovals } from '../../lib/adminProjectDetails'
 import { debugAction, reportActionError } from '../../lib/actionFeedback'
 import { supabase } from '../../lib/supabase'
@@ -132,9 +133,9 @@ export default function AdminProjectDetailPage() {
     }
   }
 
-  if (loading) return <p className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-[var(--text-muted)]">Loading project…</p>
-  if (error) return <p role="alert" className="rounded-xl border border-[var(--status-rejected-soft)] bg-[var(--status-rejected-soft)] p-4 text-sm text-[var(--status-rejected)]">Could not load project: {error}</p>
-  if (!details) return <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Admin workspace</p><h1 className="mt-3 text-2xl font-semibold text-[var(--text-primary)]">Project not found</h1><p className="mt-2 text-sm text-[var(--text-muted)]">This project may have been removed or the link may be incorrect.</p><Link to="/admin/projects" className="mt-5 inline-flex text-sm font-semibold text-[var(--text-muted)] underline underline-offset-4">Back to projects</Link></section>
+  if (loading) return <section aria-label="Loading project details" className="space-y-5"><Skeleton className="h-36" /><Skeleton className="h-32" /><Skeleton className="h-48" /><Skeleton className="h-52" /></section>
+  if (error) return <ErrorState message={`Could not load project: ${error}`} onRetry={() => void load()} />
+  if (!details) return <EmptyState title="Project not found" description="This project may have been removed or the link may be incorrect." action={<Link to="/admin/projects" className="inline-flex min-h-11 items-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-hover)]">Back to projects</Link>} />
 
   return (
     <section className="space-y-7">
@@ -162,12 +163,12 @@ export default function AdminProjectDetailPage() {
           <label className="space-y-1.5 text-xs font-semibold text-[var(--text-muted)]">Due date <span className="font-normal text-[var(--text-muted)]">· optional</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className="portal-input" /></label>
           <label className="space-y-1.5 text-xs font-semibold text-[var(--text-muted)] sm:col-span-2">Description <span className="font-normal text-[var(--text-muted)]">· optional</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Add useful context for your client" className="portal-input resize-y" /></label>
         </div>
-        <button type="submit" disabled={addingMilestone} className="mt-4 rounded-xl bg-[var(--gold)] px-4 py-2.5 text-sm font-semibold text-[var(--text-on-gold)] transition hover:bg-[var(--gold-hover)] disabled:opacity-50">{addingMilestone ? 'Adding…' : 'Add milestone'} <span aria-hidden="true">→</span></button>
+        <Button type="submit" disabled={addingMilestone} className="mt-4">{addingMilestone ? 'Adding…' : 'Add milestone'} <span aria-hidden="true">→</span></Button>
       </form>
 
       <div className="space-y-4">
         <div><h2 className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">Milestones</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Ordered by project sequence.</p></div>
-        {details.milestones.length === 0 && <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)] p-8 text-center text-sm text-[var(--text-muted)]">No milestones yet. Add one above to get started.</p>}
+        {details.milestones.length === 0 && <EmptyState title="No milestones yet" description="Add the first milestone above to give your client a clear next step." />}
         <div className="space-y-4">{details.milestones.map((milestone) => (
           <article key={milestone.id} style={milestone.status === 'in_review' ? { backgroundColor: 'var(--feature)', borderColor: 'var(--feature-border)' } : undefined} className="motion-card rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -176,8 +177,8 @@ export default function AdminProjectDetailPage() {
                 {milestone.description && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--text-muted)]">{milestone.description}</p>}
               </div>
               <div className="flex gap-2">
-                {(milestone.status === 'pending' || milestone.status === 'changes_requested') && <button type="button" disabled={milestoneActionId !== null} onClick={() => void setInReview(milestone)} className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-hover)] disabled:cursor-wait disabled:opacity-50">{milestoneActionId === milestone.id ? 'Sending…' : 'Send for review'} <span aria-hidden="true">→</span></button>}
-                <button type="button" disabled={milestoneActionId !== null} onClick={() => void deleteMilestone(milestone)} className="rounded-xl border border-[var(--status-rejected-soft)] px-3 py-2 text-xs font-semibold text-[var(--status-rejected)] transition hover:bg-[var(--status-rejected-soft)] disabled:cursor-wait disabled:opacity-50">{milestoneActionId === milestone.id ? 'Deleting…' : 'Delete'}</button>
+                {(milestone.status === 'pending' || milestone.status === 'changes_requested') && <Button variant="secondary" disabled={milestoneActionId !== null} onClick={() => void setInReview(milestone)}>{milestoneActionId === milestone.id ? 'Sending…' : 'Send for review'} <span aria-hidden="true">→</span></Button>}
+                <Button variant="danger" disabled={milestoneActionId !== null} onClick={() => void deleteMilestone(milestone)}>{milestoneActionId === milestone.id ? 'Deleting…' : 'Delete'}</Button>
               </div>
             </div>
               <div className="mt-5 border-t border-[var(--border)] pt-4">

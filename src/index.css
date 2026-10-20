@@ -51,6 +51,17 @@ button, a, select { -webkit-tap-highlight-color: transparent; }
 .motion-card { transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease; }
 .motion-card:hover { transform: translateY(-2px); border-color: var(--surface-hover); }
 .progress-fill { transition: width 200ms ease; }
+@keyframes approval-confirm {
+  0% { background-color: var(--feature); }
+  100% { background-color: var(--card); }
+}
+@keyframes approval-check {
+  0% { opacity: 0; transform: scale(.65); }
+  70% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.approval-success { animation: approval-confirm 900ms ease-out both; }
+.approval-check { display: inline-block; animation: approval-check 220ms ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

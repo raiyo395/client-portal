@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import ProgressBar from '../../components/ProgressBar'
 import StatusBadge from '../../components/StatusBadge'
+import { Button, EmptyState, ErrorState, Skeleton } from '../../components/ui'
 import { createAdminProject, fetchAdminProjects, fetchClientProfiles, type AdminProjectRow } from '../../lib/adminProjects'
 import { debugAction, reportActionError } from '../../lib/actionFeedback'
 import type { Profile } from '../../types'
@@ -98,9 +99,9 @@ export default function AdminProjectsPage() {
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        {[{ label: 'All projects', value: projects.length, note: 'Across your workspace' }, { label: 'Active', value: activeCount, note: 'Currently in progress' }, { label: 'Completed', value: completeCount, note: 'Successfully delivered' }].map((stat, index) => (
-          <article key={stat.label} className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <div className={`absolute inset-y-0 left-0 w-1 ${index === 1 ? 'bg-[var(--surface-hover)]' : index === 2 ? 'bg-[var(--surface-hover)]' : 'bg-[var(--surface-hover)]'}`} />
+        {[{ label: 'All projects', value: projects.length, note: 'Across your workspace' }, { label: 'Active', value: activeCount, note: 'Currently in progress' }, { label: 'Completed', value: completeCount, note: 'Successfully delivered' }].map((stat) => (
+          <article key={stat.label} className="motion-card relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+            <div aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-[var(--surface-hover)]" />
             <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[var(--text-muted)]">{stat.label}</p><p className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">{stat.value}</p><p className="mt-1 text-xs text-[var(--text-muted)]">{stat.note}</p>
           </article>
         ))}
@@ -109,9 +110,9 @@ export default function AdminProjectsPage() {
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_350px]">
         <section className="order-2 space-y-4 xl:order-1">
           <div className="flex items-center justify-between gap-3"><div><h2 className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">All projects</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Select a project to manage its milestones.</p></div><span className="text-xs font-medium text-[var(--text-muted)]">{projects.length} records</span></div>
-          {loading && <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 text-sm text-[var(--text-muted)]">Loading projects…</div>}
-          {error && <p role="alert" className="rounded-xl border border-[var(--status-rejected-soft)] bg-[var(--status-rejected-soft)] p-4 text-sm text-[var(--status-rejected)]">Could not load projects: {error}</p>}
-          {!loading && !error && projects.length === 0 && <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)] px-6 py-12 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--card)] text-xl text-[var(--text-muted)]">⌁</span><h3 className="mt-4 font-semibold text-[var(--text-primary)]">A fresh start</h3><p className="mt-1 text-sm text-[var(--text-muted)]">Create a project to begin tracking client work.</p></div>}
+          {loading && <div aria-label="Loading projects" className="grid gap-3 lg:grid-cols-2"><Skeleton className="h-44" /><Skeleton className="h-44" /></div>}
+          {error && <ErrorState message={`Could not load projects: ${error}`} onRetry={() => void loadProjects()} />}
+          {!loading && !error && projects.length === 0 && <EmptyState title="A fresh start" description="Create a project to begin tracking client work." action={<a href="#create-project" className="inline-flex min-h-11 items-center rounded-xl bg-[var(--gold)] px-4 py-2.5 text-sm font-semibold text-[var(--text-on-gold)] transition hover:bg-[var(--gold-hover)] active:bg-[var(--gold-pressed)]">Create your first project</a>} />}
           {!loading && !error && projects.length > 0 && <div className="grid gap-3 lg:grid-cols-2">{projects.map((project) => (
             <article key={project.id} style={{ animationDelay: `${Math.min(projects.indexOf(project), 6) * 65}ms` }} className="motion-card page-enter group rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
               <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.17em] text-[var(--text-muted)]">Client project</p><Link to={`/admin/projects/${project.id}`} className="mt-1.5 block truncate text-base font-semibold text-[var(--text-primary)] decoration-[var(--text-muted)] underline-offset-4 group-hover:underline">{project.name}</Link></div><StatusBadge status={project.status} /></div>
@@ -123,7 +124,7 @@ export default function AdminProjectsPage() {
         </section>
 
         <aside className="order-1 xl:sticky xl:top-8 xl:order-2">
-          <form onSubmit={createProject} className="motion-card overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[0_12px_34px_-24px_var(--canvas)]">
+          <form id="create-project" onSubmit={createProject} className="motion-card overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[0_12px_34px_-24px_var(--canvas)]">
             <div className="border-b border-[var(--border)] px-5 py-5 sm:px-6"><div className="flex items-center justify-between"><div className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--card)] text-lg text-[var(--text-muted)]">＋</div><span className="rounded-full bg-[var(--surface-hover)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Quick create</span></div><h2 className="mt-4 text-lg font-semibold tracking-tight text-[var(--text-primary)]">Start a project</h2><p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">Set up a new client workspace in a few details.</p></div>
             <div className="space-y-4 px-5 py-5 sm:px-6">
               <label className="block space-y-1.5 text-xs font-semibold text-[var(--text-muted)]">Project name<input required maxLength={160} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Brand refresh" className="portal-input" /></label>
@@ -133,7 +134,7 @@ export default function AdminProjectsPage() {
               {!clientsLoading && !clientLoadError && clients.length === 0 && <p className="text-xs leading-5 text-[var(--status-pending)]">No clients yet. Ask a client to sign up first.</p>}
               {formError && <p role="alert" className="rounded-lg border border-[var(--status-rejected-soft)] bg-[var(--status-rejected-soft)] p-3 text-xs leading-5 text-[var(--status-rejected)]">{formError}</p>}
               {success && <p role="status" className="rounded-lg border border-[var(--status-approved-soft)] bg-[var(--card)] p-3 text-xs text-[var(--status-approved)]">{success}</p>}
-              <button type="submit" disabled={saving || clientsLoading || clients.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--gold)] px-4 py-3 text-sm font-semibold text-[var(--text-on-gold)] shadow-sm transition hover:bg-[var(--gold-hover)] disabled:cursor-not-allowed disabled:opacity-50">{saving ? 'Creating project…' : 'Create project'}<span aria-hidden="true">→</span></button>
+              <Button type="submit" disabled={saving || clientsLoading || clients.length === 0} className="w-full">{saving ? 'Creating project…' : 'Create project'}<span aria-hidden="true">→</span></Button>
             </div>
           </form>
         </aside>

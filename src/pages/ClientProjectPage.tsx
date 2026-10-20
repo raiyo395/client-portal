@@ -81,45 +81,45 @@ export default function ClientProjectPage() {
 
   const approvedCount = details?.milestones.filter((milestone) => milestone.status === 'approved').length ?? 0
 
-  if (loading) return <p className="rounded-2xl border border-[#223127] bg-[#141D17] p-6 text-sm text-[#aab8ad]">Loading project…</p>
-  if (error) return <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-4 text-sm text-[#e0a182]">Could not load project: {error}</p>
-  if (!details) return <section className="rounded-2xl border border-[#223127] bg-[#141D17] p-8"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9aa99e]">Client workspace</p><h1 className="mt-3 text-2xl font-semibold text-[#e0e9e2]">Project not found</h1><p className="mt-2 text-sm text-[#aab8ad]">This project is unavailable or you don’t have access to it.</p><Link to="/projects" className="mt-5 inline-flex text-sm font-semibold text-[#b7d39f] underline underline-offset-4">Back to projects</Link></section>
+  if (loading) return <p className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-[var(--text-muted)]">Loading project…</p>
+  if (error) return <p role="alert" className="rounded-xl border border-[var(--status-rejected-soft)] bg-[var(--status-rejected-soft)] p-4 text-sm text-[var(--status-rejected)]">Could not load project: {error}</p>
+  if (!details) return <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Client workspace</p><h1 className="mt-3 text-2xl font-semibold text-[var(--text-primary)]">Project not found</h1><p className="mt-2 text-sm text-[var(--text-muted)]">This project is unavailable or you don’t have access to it.</p><Link to="/projects" className="mt-5 inline-flex text-sm font-semibold text-[var(--text-primary)] underline underline-offset-4">Back to projects</Link></section>
 
   return (
     <section className="space-y-7">
-      <header className="relative overflow-hidden rounded-[26px] bg-[#203d30] px-5 py-6 text-white sm:px-8 sm:py-8">
-        <div aria-hidden="true" className="absolute -right-8 -top-12 h-52 w-52 rounded-full border border-white/10" />
-        <Link to="/projects" className="relative text-xs font-semibold text-[#d1dfd1] hover:text-white">← Your projects</Link>
+      <header className="relative overflow-hidden rounded-[26px] bg-[var(--card)] px-5 py-6 text-[var(--text-primary)] sm:px-8 sm:py-8">
+        <div aria-hidden="true" className="absolute -right-8 -top-12 h-52 w-52 rounded-full border border-[var(--border)]" />
+        <Link to="/projects" className="relative text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)]">← Your projects</Link>
         <div className="relative mt-5 flex flex-wrap items-center gap-3"><h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{details.project.name}</h1><StatusBadge status={details.project.status} /></div>
-        <p className="relative mt-3 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-[#d0ddd3]">{details.project.description || 'No project description.'}</p>
-        <div className="relative mt-6 max-w-sm rounded-xl border border-white/10 bg-black/10 p-4"><ProgressBar approved={approvedCount} total={details.milestones.length} /></div>
+        <p className="relative mt-3 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-[var(--text-muted)]">{details.project.description || 'No project description.'}</p>
+        <div className="relative mt-6 max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] p-4"><ProgressBar approved={approvedCount} total={details.milestones.length} /></div>
       </header>
-      {actionError && <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-3 text-sm text-[#e0a182]">{actionError}</p>}
-      {actionSuccess && <p role="status" className="rounded-xl border border-[#3e5640] bg-[#141D17] p-3 text-sm text-[#b6d59f]">{actionSuccess}</p>}
+      {actionError && <p role="alert" className="rounded-xl border border-[var(--status-rejected-soft)] bg-[var(--status-rejected-soft)] p-3 text-sm text-[var(--status-rejected)]">{actionError}</p>}
+      {actionSuccess && <p role="status" className="rounded-xl border border-[var(--status-approved-soft)] bg-[var(--card)] p-3 text-sm text-[var(--status-approved)]">{actionSuccess}</p>}
       <ProjectFilesSection projectId={details.project.id} />
       <div className="space-y-4">
-        <div><h2 className="text-lg font-semibold tracking-tight text-[#e0e9e2]">Milestone timeline</h2><p className="mt-1 text-xs text-[#aab8ad]">A shared view of what’s done and what’s next.</p></div>
-        {details.milestones.length === 0 && <p className="rounded-2xl border border-dashed border-[#223127] bg-[#141D17] p-8 text-center text-sm text-[#aab8ad]">No milestones have been added yet.</p>}
-        <ol className="relative space-y-4 before:absolute before:bottom-8 before:left-[19px] before:top-8 before:w-px before:bg-[#223127]">{details.milestones.map((milestone, index) => (
-          <li key={milestone.id} style={{ animationDelay: `${Math.min(index, 6) * 65}ms` }} className="motion-card page-enter relative rounded-2xl border border-[#223127] bg-[#141D17] p-5 sm:ml-10 sm:p-6 before:absolute before:-left-[31px] before:top-7 before:hidden before:h-3 before:w-3 before:rounded-full before:border-[3px] before:border-[#141D17] before:bg-[#9bbc82] before:content-[''] sm:before:block">
-            <div className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9aa99e]"><span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#141D17] text-xs font-semibold text-[#b7d39f] sm:absolute sm:-left-[47px] sm:top-4">{String(index + 1).padStart(2, '0')}</span>Milestone</div>
-            <div className="flex flex-wrap items-start justify-between gap-3"><h3 className="text-base font-semibold text-[#e0e9e2]">{milestone.title}</h3><StatusBadge status={milestone.status} /></div>
-            {milestone.due_date && <p className="mt-2 text-xs font-medium text-[#9aa99e]">Due {new Date(`${milestone.due_date}T00:00:00`).toLocaleDateString()}</p>}
-            {milestone.description && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#aab8ad]">{milestone.description}</p>}
+        <div><h2 className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">Milestone timeline</h2><p className="mt-1 text-xs text-[var(--text-muted)]">A shared view of what’s done and what’s next.</p></div>
+        {details.milestones.length === 0 && <p className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)] p-8 text-center text-sm text-[var(--text-muted)]">No milestones have been added yet.</p>}
+        <ol className="relative space-y-4 before:absolute before:bottom-8 before:left-[19px] before:top-8 before:w-px before:bg-[var(--surface-hover)]">{details.milestones.map((milestone, index) => (
+          <li key={milestone.id} style={milestone.status === 'in_review' ? { animationDelay: `${Math.min(index, 6) * 65}ms`, backgroundColor: 'var(--feature)', borderColor: 'var(--feature-border)' } : { animationDelay: `${Math.min(index, 6) * 65}ms` }} className="motion-card page-enter relative rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 sm:ml-10 sm:p-6 before:absolute before:-left-[31px] before:top-7 before:hidden before:h-3 before:w-3 before:rounded-full before:border-[3px] before:border-[var(--card)] before:bg-[var(--surface-hover)] before:content-[''] sm:before:block">
+            <div className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]"><span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--card)] text-xs font-semibold text-[var(--text-muted)] sm:absolute sm:-left-[47px] sm:top-4">{String(index + 1).padStart(2, '0')}</span>Milestone</div>
+            <div className="flex flex-wrap items-start justify-between gap-3"><h3 className="text-base font-semibold text-[var(--text-primary)]">{milestone.title}</h3><StatusBadge status={milestone.status} /></div>
+            {milestone.due_date && <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">Due {new Date(`${milestone.due_date}T00:00:00`).toLocaleDateString()}</p>}
+            {milestone.description && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--text-muted)]">{milestone.description}</p>}
 
-            <div className="mt-5 rounded-2xl border border-[#223127] bg-[#141D17] p-4 sm:p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#b7d39f]">Your review</p>
-              {milestone.status !== 'in_review' && <p className="mt-2 text-sm text-[#9aa99e]">Review actions become available when this milestone is in review.</p>}
-              <label className="mt-3 block space-y-1.5 text-xs font-semibold text-[#c4d2c8]">Comment <span className="font-normal text-[#9aa99e]">· required to request changes</span>
-                <textarea rows={3} disabled={milestone.status !== 'in_review' || submittingId !== null} value={comments[milestone.id] ?? ''} onChange={(event) => setComments((current) => ({ ...current, [milestone.id]: event.target.value }))} placeholder="Share a note for the project team" className="portal-input resize-y bg-[#141D17] disabled:cursor-not-allowed disabled:opacity-50" />
+            <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-hover)] p-4 sm:p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">Your review</p>
+              {milestone.status !== 'in_review' && <p className="mt-2 text-sm text-[var(--text-muted)]">Review actions become available when this milestone is in review.</p>}
+              <label className="mt-3 block space-y-1.5 text-xs font-semibold text-[var(--text-muted)]">Comment <span className="font-normal text-[var(--text-muted)]">· required to request changes</span>
+                <textarea rows={3} disabled={milestone.status !== 'in_review' || submittingId !== null} value={comments[milestone.id] ?? ''} onChange={(event) => setComments((current) => ({ ...current, [milestone.id]: event.target.value }))} placeholder="Share a note for the project team" className="portal-input resize-y bg-[var(--canvas)] disabled:cursor-not-allowed disabled:opacity-50" />
               </label>
-              <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={submittingId !== null || milestone.status !== 'in_review'} onClick={() => void submitDecision(milestone.id, 'approved')} className="rounded-xl bg-[#416c4b] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#355c3e] disabled:cursor-not-allowed disabled:opacity-50">{submittingId === milestone.id ? 'Submitting…' : 'Approve'} <span aria-hidden="true">✓</span></button>
-                <button type="button" disabled={submittingId !== null || milestone.status !== 'in_review'} onClick={() => void submitDecision(milestone.id, 'changes_requested')} className="rounded-xl border border-[#594535] bg-[#141D17] px-4 py-2.5 text-sm font-semibold text-[#e0a182] transition hover:bg-[#3a2e20] disabled:cursor-not-allowed disabled:opacity-50">{submittingId === milestone.id ? 'Submitting…' : 'Request changes'}</button></div>
+              <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={submittingId !== null || milestone.status !== 'in_review'} onClick={() => void submitDecision(milestone.id, 'approved')} className="rounded-xl bg-[var(--gold)] px-4 py-2.5 text-sm font-semibold text-[var(--text-on-gold)] transition hover:bg-[var(--gold-hover)] active:bg-[var(--gold-pressed)] disabled:cursor-not-allowed disabled:opacity-50">{submittingId === milestone.id ? 'Submitting…' : 'Approve'} <span aria-hidden="true">✓</span></button>
+                <button type="button" disabled={submittingId !== null || milestone.status !== 'in_review'} onClick={() => void submitDecision(milestone.id, 'changes_requested')} className="rounded-xl border border-[var(--status-rejected-soft)] bg-[var(--card)] px-4 py-2.5 text-sm font-semibold text-[var(--status-rejected)] transition hover:bg-[var(--status-rejected-soft)] disabled:cursor-not-allowed disabled:opacity-50">{submittingId === milestone.id ? 'Submitting…' : 'Request changes'}</button></div>
             </div>
 
-            <div className="mt-5 border-t border-[#223127] pt-4"><h4 className="text-xs font-bold uppercase tracking-[0.13em] text-[#aab8ad]">Past decisions</h4>
-              {milestone.approvals.length === 0 ? <p className="mt-2 text-sm text-[#9aa99e]">No decisions yet.</p> : <ol className="mt-3 space-y-3">{milestone.approvals.map((approval) => (
-                <li key={approval.id} className="rounded-xl bg-[#223127] p-3"><div className="flex flex-wrap items-center justify-between gap-2"><StatusBadge status={approval.decision} /><time className="text-xs text-[#9aa99e]" dateTime={approval.created_at}>{new Date(approval.created_at).toLocaleString()}</time></div>{approval.comment && <p className="mt-2 whitespace-pre-wrap text-sm leading-5 text-[#bfcdc2]">{approval.comment}</p>}</li>
+            <div className="mt-5 border-t border-[var(--border)] pt-4"><h4 className="text-xs font-bold uppercase tracking-[0.13em] text-[var(--text-muted)]">Past decisions</h4>
+              {milestone.approvals.length === 0 ? <p className="mt-2 text-sm text-[var(--text-muted)]">No decisions yet.</p> : <ol className="mt-3 space-y-3">{milestone.approvals.map((approval) => (
+                <li key={approval.id} className="rounded-xl bg-[var(--surface-hover)] p-3"><div className="flex flex-wrap items-center justify-between gap-2"><StatusBadge status={approval.decision} /><time className="text-xs text-[var(--text-muted)]" dateTime={approval.created_at}>{new Date(approval.created_at).toLocaleString()}</time></div>{approval.comment && <p className="mt-2 whitespace-pre-wrap text-sm leading-5 text-[var(--text-muted)]">{approval.comment}</p>}</li>
               ))}</ol>}
             </div>
           </li>

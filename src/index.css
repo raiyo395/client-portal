@@ -11,15 +11,27 @@
   -moz-osx-font-smoothing: grayscale;
   font-optical-sizing: auto;
 
-  --canvas: #0B0B10;
-  --card: #13131B;
-  --border: rgb(255 255 255 / 8%);
-  --accent: #6D5EF5;
-  --text-primary: #F2F2F7;
-  --text-secondary: #9494A8;
-  --status-pending: #fbbf24;
-  --status-approved: #34d399;
-  --status-rejected: #fb7185;
+  --canvas: #0E1118;
+  --nav: #1A1224;
+  --card: #141A24;
+  --border: rgb(255 255 255 / 7%);
+  --feature: #0B3C2C;
+  --feature-border: rgb(212 175 55 / 25%);
+  --surface-hover: #1B2230;
+  --gold: #D4AF37;
+  --gold-hover: #E3C25A;
+  --gold-pressed: #B8962E;
+  --gold-focus-ring: rgb(212 175 55 / 25%);
+  --text-on-gold: #0E1118;
+  --text-primary: #F4F6F9;
+  --text-muted: rgb(244 246 249 / 65%);
+  --text-secondary: var(--text-muted);
+  --status-pending: #8B9CFF;
+  --status-pending-soft: rgb(139 156 255 / 12%);
+  --status-approved: #34D399;
+  --status-approved-soft: rgb(52 211 153 / 12%);
+  --status-rejected: #FB7185;
+  --status-rejected-soft: rgb(251 113 133 / 12%);
   --radius-card: 16px;
 }
 
@@ -27,8 +39,8 @@
 body { min-width: 320px; min-height: 100vh; margin: 0; }
 button, input, textarea, select { font: inherit; }
 button, a, select { -webkit-tap-highlight-color: transparent; }
-::selection { background: var(--accent); color: var(--text-primary); }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+::selection { background: var(--surface-hover); color: var(--text-primary); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 
 @keyframes portal-enter {
   from { opacity: 0; transform: translateY(6px); }
@@ -37,7 +49,7 @@ button, a, select { -webkit-tap-highlight-color: transparent; }
 
 .page-enter { animation: portal-enter 200ms ease-out both; }
 .motion-card { transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease; }
-.motion-card:hover { transform: translateY(-2px); border-color: rgb(255 255 255 / 15%); }
+.motion-card:hover { transform: translateY(-2px); border-color: var(--surface-hover); }
 .progress-fill { transition: width 200ms ease; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -57,6 +69,6 @@ button, a, select { -webkit-tap-highlight-color: transparent; }
     color: var(--text-primary);
   }
   .portal-input::placeholder { color: var(--text-secondary); }
-  .portal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(109 94 245 / 20%); }
+  .portal-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-focus-ring); }
   .portal-input:disabled { cursor: not-allowed; opacity: .55; }
 }

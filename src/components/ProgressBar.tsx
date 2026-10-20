@@ -8,7 +8,7 @@ export default function ProgressBar({ approved, total }: { approved: number; tot
         <span className="text-[var(--text-primary)]">{percent}%</span>
       </div>
       <div
-        className="h-1.5 overflow-hidden rounded-full bg-white/10"
+        className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]"
         role="progressbar"
         aria-valuenow={approved}
         aria-valuemin={0}

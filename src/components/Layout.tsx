@@ -6,7 +6,7 @@ import { Badge, Button } from './ui'
 
 function Mark() {
   return (
-    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--accent)] text-xs font-bold tracking-wide text-white">
+    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--surface-hover)] text-xs font-bold tracking-wide text-[var(--text-primary)]">
       CP
     </span>
   )
@@ -47,7 +47,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[var(--canvas)] text-[var(--text-primary)] md:flex">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--canvas)] px-4 py-5 md:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--nav)] px-4 py-5 md:flex">
         <Link to="/" className="flex min-h-11 items-center gap-3 rounded-xl px-2 focus-visible:outline-offset-2">
           <Mark />
           <span className="min-w-0"><span className="block truncate text-sm font-semibold">Client Portal</span><span className="mt-0.5 block text-xs text-[var(--text-secondary)]">Project workspace</span></span>
@@ -55,14 +55,14 @@ export default function Layout() {
 
         <p className="mb-2 mt-9 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]">Workspace</p>
         <nav aria-label="Main navigation" className="space-y-1">
-          {navItems.map((item) => <NavLink key={item.to} to={item.to} end className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition ${isActive ? 'bg-[var(--accent)]/15 text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)]'}`}>
+          {navItems.map((item) => <NavLink key={item.to} to={item.to} end className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition ${isActive ? 'bg-[var(--gold)] text-[var(--text-on-gold)]' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]'}`}>
             <NavIcon kind={item.icon} />{item.label}
           </NavLink>)}
         </nav>
 
         <div className="mt-auto rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--card)] p-3">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/5 text-xs font-semibold text-[var(--text-primary)]">{initials}</span>
+            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--surface-hover)] text-xs font-semibold text-[var(--text-primary)]">{initials}</span>
             <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{displayName}</span><span className="mt-1 block"><Badge>{profile?.role ?? 'Member'}</Badge></span></span>
           </div>
           {signOutError && <p role="alert" className="mt-3 text-xs leading-5 text-[var(--status-rejected)]">Could not log out: {signOutError}</p>}
@@ -73,7 +73,7 @@ export default function Layout() {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <header className="border-b border-[var(--border)] bg-[var(--canvas)] px-4 py-3 sm:px-6 md:hidden">
+        <header className="border-b border-[var(--border)] bg-[var(--nav)] px-4 py-3 sm:px-6 md:hidden">
           <div className="flex min-h-11 items-center justify-between gap-3">
             <Link to="/" className="flex min-w-0 items-center gap-2.5 rounded-xl"><Mark /><span className="truncate text-sm font-semibold">Client Portal</span></Link>
             <Button variant="secondary" disabled={loggingOut} onClick={() => void handleSignOut()} className="min-w-24 px-3 text-xs">
@@ -82,7 +82,7 @@ export default function Layout() {
           </div>
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
             <nav aria-label="Main navigation" className="min-w-0 flex-1">
-              {navItems.map((item) => <NavLink key={item.to} to={item.to} end className={({ isActive }) => `flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium transition ${isActive ? 'bg-[var(--accent)]/15 text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-white/5'}`}>
+              {navItems.map((item) => <NavLink key={item.to} to={item.to} end className={({ isActive }) => `flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium transition ${isActive ? 'bg-[var(--gold)] text-[var(--text-on-gold)]' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}>
                 <NavIcon kind={item.icon} />{item.label}
               </NavLink>)}
             </nav>

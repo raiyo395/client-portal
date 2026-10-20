@@ -53,9 +53,9 @@ export default function ClientProjectsPage() {
             </div>
 
             {projects.length > 0 && (
-              <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <Card style={{ backgroundColor: 'var(--feature)', borderColor: 'var(--feature-border)' }} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <div className="flex items-start gap-4">
-                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--accent)]/15 text-[var(--text-primary)]">
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--surface-hover)] text-[var(--text-primary)]">
                     <svg viewBox="0 0 20 20" fill="none" className="size-5"><path d="M10 3v14M3 10h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
                   </span>
                   <div>
@@ -64,7 +64,7 @@ export default function ClientProjectsPage() {
                     <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">Open a project to see milestones ready for your review.</p>
                   </div>
                 </div>
-                <Link to={`/projects/${projects[0].id}`} className="inline-flex min-h-11 items-center justify-center gap-2 self-stretch rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:brightness-110 focus-visible:outline-offset-2 sm:self-auto">
+                <Link to={`/projects/${projects[0].id}`} className="inline-flex min-h-11 items-center justify-center gap-2 self-stretch rounded-xl bg-[var(--gold)] px-4 py-2.5 text-sm font-semibold text-[var(--text-on-gold)] transition duration-200 hover:bg-[var(--gold-hover)] active:bg-[var(--gold-pressed)] focus-visible:outline-offset-2 sm:self-auto">
                   Review project <span aria-hidden="true">→</span>
                 </Link>
               </Card>
@@ -98,7 +98,7 @@ export default function ClientProjectsPage() {
                   key={project.id}
                   to={`/projects/${project.id}`}
                   aria-label={`Open ${project.name}`}
-                  className="motion-card group block min-w-0 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--card)] p-5 transition-colors hover:bg-white/[0.025] focus-visible:outline-offset-4 sm:p-6"
+                  className="motion-card group block min-w-0 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--card)] p-5 transition-colors hover:bg-[var(--surface-hover)] focus-visible:outline-offset-4 sm:p-6"
                 >
                   <div className="flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -108,7 +108,7 @@ export default function ClientProjectsPage() {
                     <StatusBadge status={project.status} />
                   </div>
                   <p className="mt-4 min-h-10 text-sm leading-5 text-[var(--text-secondary)]">{project.description || 'Project details and milestones are ready to explore.'}</p>
-                  <div className="mt-5 rounded-xl border border-[var(--border)] bg-black/10 p-4">
+                  <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] p-4">
                     <ProgressBar approved={project.approved} total={project.milestone_total} />
                   </div>
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-secondary)]">

@@ -58,7 +58,12 @@ export async function uploadProjectFile(file: File, projectId: string, userId: s
 
   const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
   const mimeType = MIME_BY_EXTENSION[extension]
-  const safeName = file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 120) || 'file'
+  const safeName = file.name
+    .replace(/\s+/g, '_')
+    .normalize('NFKD')
+    .replace(/[^a-zA-Z0-9._-]/g, '')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 120) || 'file'
   const storagePath = `${projectId}/${crypto.randomUUID()}-${safeName}`
 
   const { error: uploadError } = await supabase.storage.from('project-files').upload(storagePath, file, {
@@ -88,10 +93,17 @@ export async function uploadProjectFile(file: File, projectId: string, userId: s
 }
 
 export async function downloadProjectFile(file: ProjectFile): Promise<void> {
-  const { data, error } = await supabase.storage.from('project-files')
-    .createSignedUrl(file.storage_path, 60, { download: file.file_name })
+  const filePath = decodeURIComponent(file.storage_path)
+  const { data, error } = await supabase.storage.from('project-files').download(filePath)
   if (error) throw error
-  window.location.assign(data.signedUrl)
+  const objectUrl = URL.createObjectURL(data)
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = file.file_name
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
 }
 
 export async function deleteProjectFile(file: ProjectFile): Promise<void> {

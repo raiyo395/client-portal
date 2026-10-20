@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProgressBar from '../components/ProgressBar'
 import StatusBadge from '../components/StatusBadge'
+import { Button, Card, EmptyState, ErrorState, Skeleton } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 import { fetchClientProjects, type ClientProjectRow } from '../lib/clientProjects'
 
@@ -10,6 +11,7 @@ export default function ClientProjectsPage() {
   const [projects, setProjects] = useState<ClientProjectRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryToken, setRetryToken] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -21,32 +23,104 @@ export default function ClientProjectsPage() {
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [profile])
+  }, [profile, retryToken])
 
   const active = projects.filter((project) => project.status === 'active').length
   const approved = projects.reduce((sum, project) => sum + project.approved, 0)
+  const retry = () => {
+    setLoading(true)
+    setError(null)
+    setRetryToken((value) => value + 1)
+  }
 
   return (
-    <section className="space-y-8">
-      <header className="relative overflow-hidden rounded-[26px] bg-[#203d30] px-6 py-7 text-white sm:px-9 sm:py-9">
-        <div aria-hidden="true" className="absolute -right-10 -top-20 h-64 w-64 rounded-full border border-white/10" /><div aria-hidden="true" className="absolute -right-2 -top-12 h-48 w-48 rounded-full border border-white/10" />
-        <div className="relative max-w-xl"><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#c8d8c4]">Client workspace</p><h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Your projects</h1><p className="mt-3 text-sm leading-6 text-[#d0ddd3]">Everything we’re building together, gathered in one place.</p></div>
-        <div className="relative mt-7 flex flex-wrap gap-2 text-xs"><span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5">{projects.length} {projects.length === 1 ? 'project' : 'projects'}</span><span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5">{active} active</span><span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5">{approved} milestones approved</span></div>
-      </header>
+    <section className="space-y-7 sm:space-y-8">
+      {loading ? (
+        <>
+          <Skeleton className="h-40 rounded-[var(--radius-card)] sm:h-44" />
+          <div className="grid gap-3 sm:grid-cols-3"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>
+          <div className="grid gap-4 lg:grid-cols-2"><Skeleton className="h-56" /><Skeleton className="h-56" /></div>
+        </>
+      ) : error ? (
+        <ErrorState message={`Could not load projects: ${error}`} onRetry={retry} />
+      ) : (
+        <>
+          <header className="space-y-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]">Client workspace</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">Your projects</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">A focused view of progress, decisions, and what comes next.</p>
+            </div>
 
-      <div className="flex items-end justify-between gap-4"><div><h2 className="text-lg font-semibold tracking-tight text-[#e0e9e2]">Project overview</h2><p className="mt-1 text-xs text-[#aab8ad]">Choose a project to see the timeline and review milestones.</p></div>{!loading && projects.length > 0 && <span className="text-xs font-medium text-[#aab8ad]">{projects.length} total</span>}</div>
-      {loading && <div className="rounded-2xl border border-[#223127] bg-[#141D17] p-8 text-sm text-[#aab8ad]">Loading your projects…</div>}
-      {error && <p role="alert" className="rounded-xl border border-[#56382d] bg-[#39251f] p-4 text-sm text-[#e0a182]">Could not load projects: {error}</p>}
-      {!loading && !error && projects.length === 0 && <div className="rounded-2xl border border-dashed border-[#223127] bg-[#141D17] px-6 py-14 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#141D17] text-xl text-[#a7c68f]">✳</span><h3 className="mt-4 font-semibold text-[#d5e1d7]">Your workspace is ready</h3><p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-[#aab8ad]">When a project is assigned to you, it will appear here with its latest progress.</p></div>}
-      {!loading && !error && projects.length > 0 && <div className="grid gap-4 lg:grid-cols-2">{projects.map((project, index) => (
-        <Link key={project.id} to={`/projects/${project.id}`} style={{ animationDelay: `${Math.min(index, 6) * 65}ms` }} className="motion-card page-enter group relative overflow-hidden rounded-2xl border border-[#223127] bg-[#141D17] p-5 shadow-[0_7px_25px_-21px_rgba(0,0,0,0.55)] sm:p-6">
-          <span aria-hidden="true" className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[#141D17] transition group-hover:scale-125" />
-          <div className="relative flex items-start justify-between gap-4"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#141D17] text-sm font-semibold text-[#b7d39f]">{String(index + 1).padStart(2, '0')}</span><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9aa99e]">Project</p><h3 className="mt-1 text-base font-semibold text-[#e0e9e2] group-hover:text-[#b7d39f]">{project.name}</h3></div></div><StatusBadge status={project.status} /></div>
-          <p className="relative mt-4 min-h-10 text-sm leading-5 text-[#aab8ad]">{project.description || 'Your project details and milestones are ready to explore.'}</p>
-          <div className="relative mt-5 rounded-xl bg-[#223127] p-4"><ProgressBar approved={project.approved} total={project.milestone_total} /></div>
-          <div className="relative mt-4 flex items-center justify-between text-[11px] text-[#9aa99e]"><span>Started {new Date(project.created_at).toLocaleDateString()}</span><span className="font-semibold text-[#b7d39f]">View project <span aria-hidden="true">↗</span></span></div>
-        </Link>
-      ))}</div>}
+            {projects.length > 0 && (
+              <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <div className="flex items-start gap-4">
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--accent)]/15 text-[var(--text-primary)]">
+                    <svg viewBox="0 0 20 20" fill="none" className="size-5"><path d="M10 3v14M3 10h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                  </span>
+                  <div>
+                    <p className="text-xs font-medium text-[var(--text-secondary)]">Review queue</p>
+                    <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">Awaiting your approval</h2>
+                    <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">Open a project to see milestones ready for your review.</p>
+                  </div>
+                </div>
+                <Link to={`/projects/${projects[0].id}`} className="inline-flex min-h-11 items-center justify-center gap-2 self-stretch rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:brightness-110 focus-visible:outline-offset-2 sm:self-auto">
+                  Review project <span aria-hidden="true">→</span>
+                </Link>
+              </Card>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Card className="p-4 sm:p-5"><p className="text-xs font-medium text-[var(--text-secondary)]">Projects</p><p className="mt-2 text-2xl font-semibold tracking-tight">{projects.length}</p></Card>
+              <Card className="p-4 sm:p-5"><p className="text-xs font-medium text-[var(--text-secondary)]">Active</p><p className="mt-2 text-2xl font-semibold tracking-tight">{active}</p></Card>
+              <Card className="p-4 sm:p-5"><p className="text-xs font-medium text-[var(--text-secondary)]">Milestones approved</p><p className="mt-2 text-2xl font-semibold tracking-tight">{approved}</p></Card>
+            </div>
+          </header>
+
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Project overview</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Select a project for its timeline, files, and review actions.</p>
+            </div>
+            {projects.length > 0 && <span className="shrink-0 text-xs text-[var(--text-secondary)]">{projects.length} total</span>}
+          </div>
+
+          {projects.length === 0 ? (
+            <EmptyState
+              title="No projects yet"
+              description="When a project is assigned to you, its progress and milestones will appear here."
+              action={<Button variant="secondary" onClick={retry}>Refresh projects</Button>}
+            />
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {projects.map((project) => (
+                <Link
+                  key={project.id}
+                  to={`/projects/${project.id}`}
+                  aria-label={`Open ${project.name}`}
+                  className="motion-card group block min-w-0 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--card)] p-5 transition-colors hover:bg-white/[0.025] focus-visible:outline-offset-4 sm:p-6"
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-[var(--text-secondary)]">Project</p>
+                      <h3 className="mt-1 truncate text-base font-semibold text-[var(--text-primary)]">{project.name}</h3>
+                    </div>
+                    <StatusBadge status={project.status} />
+                  </div>
+                  <p className="mt-4 min-h-10 text-sm leading-5 text-[var(--text-secondary)]">{project.description || 'Project details and milestones are ready to explore.'}</p>
+                  <div className="mt-5 rounded-xl border border-[var(--border)] bg-black/10 p-4">
+                    <ProgressBar approved={project.approved} total={project.milestone_total} />
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-secondary)]">
+                    <span>Started {new Date(project.created_at).toLocaleDateString()}</span>
+                    <span className="inline-flex min-h-11 items-center gap-2 font-semibold text-[var(--text-primary)]">View project <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span></span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </section>
   )
 }

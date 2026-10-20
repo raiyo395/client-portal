@@ -43,8 +43,8 @@ export default function ProjectFilesSection({ projectId }: { projectId: string }
   return (
     <section className="space-y-4">
       <Suspense fallback={<LoadingSpinner />}>
-        <FileUploader projectId={projectId} userId={profile.id} onUploaded={load} />
-        <FileList files={files} viewerId={profile.id} isAdmin={profile.role === 'admin'} loading={loading} error={error} onRetry={load} onDeleted={load} />
+        {profile.role === 'admin' && <FileUploader projectId={projectId} userId={profile.id} onUploaded={load} />}
+        <FileList files={files} isAdmin={profile.role === 'admin'} loading={loading} error={error} onRetry={load} onDeleted={load} />
       </Suspense>
     </section>
   )

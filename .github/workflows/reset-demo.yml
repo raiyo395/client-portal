@@ -1,0 +1,57 @@
+name: Reset demo data
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reset-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure demo users and clear old demo storage files
+        env:
+          DEMO_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL }}
+          DEMO_SERVICE_ROLE_KEY: ${{ secrets.DEMO_SERVICE_ROLE_KEY }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          DEMO_ADMIN_EMAIL: ${{ vars.DEMO_ADMIN_EMAIL }}
+          DEMO_CLIENT_EMAIL: ${{ vars.DEMO_CLIENT_EMAIL }}
+        run: npm run demo:users
+
+      - name: Reset demo database rows
+        env:
+          DEMO_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL }}
+          DEMO_SERVICE_ROLE_KEY: ${{ secrets.DEMO_SERVICE_ROLE_KEY }}
+          DEMO_CLIENT_EMAIL: ${{ vars.DEMO_CLIENT_EMAIL }}
+        run: |
+          test -n "$DEMO_SUPABASE_URL"
+          test -n "$DEMO_SERVICE_ROLE_KEY"
+          test -n "$DEMO_CLIENT_EMAIL"
+          payload="$(jq -n --arg email "$DEMO_CLIENT_EMAIL" '{p_demo_client_email: $email}')"
+          curl --fail-with-body --silent --show-error \
+            --request POST "$DEMO_SUPABASE_URL/rest/v1/rpc/reset_demo_data" \
+            --header "apikey: $DEMO_SERVICE_ROLE_KEY" \
+            --header "Authorization: Bearer $DEMO_SERVICE_ROLE_KEY" \
+            --header "Content-Type: application/json" \
+            --data "$payload"
+
+      - name: Upload sample demo files
+        env:
+          DEMO_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL }}
+          DEMO_SERVICE_ROLE_KEY: ${{ secrets.DEMO_SERVICE_ROLE_KEY }}
+        run: npm run demo:files

@@ -24,6 +24,12 @@ export default function Layout() {
   const { profile, session, signOut } = useAuth()
   const [loggingOut, setLoggingOut] = useState(false)
   const [signOutError, setSignOutError] = useState<string | null>(null)
+  const [demoBannerDismissed, setDemoBannerDismissed] = useState(false)
+  const signedInEmail = session?.user.email?.trim().toLowerCase()
+  const demoEmails = [import.meta.env.VITE_DEMO_ADMIN_EMAIL, import.meta.env.VITE_DEMO_CLIENT_EMAIL]
+    .filter((email): email is string => Boolean(email?.trim()))
+    .map((email) => email.trim().toLowerCase())
+  const isDemoUser = signedInEmail !== undefined && demoEmails.includes(signedInEmail)
   const isAdmin = profile?.role === 'admin'
   const displayName = profile?.full_name?.trim() || session?.user.email || 'User'
   const initials = displayName.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U'
@@ -73,6 +79,10 @@ export default function Layout() {
       </aside>
 
       <div className="min-w-0 flex-1">
+        {isDemoUser && !demoBannerDismissed && <div role="status" className="flex items-center justify-between gap-3 border-b border-[var(--feature-border)] bg-[var(--feature)] px-4 py-2.5 text-xs text-[var(--text-primary)] sm:px-6">
+          <p><span className="font-semibold">Demo mode:</span> data resets daily.</p>
+          <button type="button" aria-label="Dismiss demo mode notice" onClick={() => setDemoBannerDismissed(true)} className="grid size-9 shrink-0 place-items-center rounded-lg text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-hover)] focus-visible:outline-offset-2">×</button>
+        </div>}
         <header className="border-b border-[var(--border)] bg-[var(--nav)] px-4 py-3 sm:px-6 md:hidden">
           <div className="flex min-h-11 items-center justify-between gap-3">
             <Link to="/" className="flex min-w-0 items-center gap-2.5 rounded-xl"><Mark /><span className="truncate text-sm font-semibold">Client Portal</span></Link>

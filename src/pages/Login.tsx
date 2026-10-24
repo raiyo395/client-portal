@@ -12,6 +12,11 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [demoSubmitting, setDemoSubmitting] = useState<'admin' | 'client' | null>(null)
+  const demoAdminEmail = import.meta.env.VITE_DEMO_ADMIN_EMAIL?.trim() ?? ''
+  const demoClientEmail = import.meta.env.VITE_DEMO_CLIENT_EMAIL?.trim() ?? ''
+  const demoPassword = import.meta.env.VITE_DEMO_PASSWORD ?? ''
+  const demoConfigured = Boolean(demoAdminEmail && demoClientEmail && demoPassword)
 
   if (session) return <Navigate to="/" replace />
 
@@ -34,6 +39,27 @@ export default function Login() {
       setError(reportActionError(mode === 'login' ? 'Sign in' : 'Sign up', caught))
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleDemoSignIn(role: 'admin' | 'client') {
+    const demoEmail = role === 'admin' ? demoAdminEmail : demoClientEmail
+    debugAction(`sign in as demo ${role}`, { email: demoEmail || undefined })
+    setError(null)
+    setInfo(null)
+    if (!demoConfigured) {
+      setError('Demo access is not configured. Add the three VITE_DEMO variables to the app environment.')
+      return
+    }
+
+    setDemoSubmitting(role)
+    try {
+      const result = await signIn(demoEmail, demoPassword)
+      if (result) setError(result)
+    } catch (caught) {
+      setError(reportActionError(`Sign in as demo ${role}`, caught))
+    } finally {
+      setDemoSubmitting(null)
     }
   }
 
@@ -72,7 +98,15 @@ export default function Login() {
 
             {error && <p role="alert" className="mt-4 rounded-xl border border-[var(--status-rejected-soft)] bg-[var(--status-rejected-soft)] p-3 text-sm text-[var(--status-rejected)]">{error}</p>}
             {info && <p role="status" className="mt-4 rounded-xl border border-[var(--status-approved-soft)] bg-[var(--card)] p-3 text-sm text-[var(--status-approved)]">{info}</p>}
-            <button type="submit" disabled={submitting} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--gold)] px-4 py-3 text-sm font-semibold text-[var(--text-on-gold)] shadow-sm transition hover:bg-[var(--gold-hover)] active:bg-[var(--gold-pressed)] disabled:cursor-not-allowed disabled:opacity-50">{submitting ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}<span aria-hidden="true">→</span></button>
+            <button type="submit" disabled={submitting || demoSubmitting !== null} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--gold)] px-4 py-3 text-sm font-semibold text-[var(--text-on-gold)] shadow-sm transition hover:bg-[var(--gold-hover)] active:bg-[var(--gold-pressed)] disabled:cursor-not-allowed disabled:opacity-50">{submitting ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}<span aria-hidden="true">→</span></button>
+            {mode === 'login' && <div className="mt-5 space-y-3">
+              <div className="flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]"><span className="h-px flex-1 bg-[var(--border)]" />Explore the demo<span className="h-px flex-1 bg-[var(--border)]" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => void handleDemoSignIn('admin')} disabled={!demoConfigured || submitting || demoSubmitting !== null} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:border-[var(--gold)]/40 hover:bg-[var(--card)] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50">{demoSubmitting === 'admin' ? 'Signing in…' : 'Try as Admin'}</button>
+                <button type="button" onClick={() => void handleDemoSignIn('client')} disabled={!demoConfigured || submitting || demoSubmitting !== null} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:border-[var(--gold)]/40 hover:bg-[var(--card)] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50">{demoSubmitting === 'client' ? 'Signing in…' : 'Try as Client'}</button>
+              </div>
+              {!demoConfigured && <p className="text-center text-xs text-[var(--text-muted)]">Demo access is unavailable until its environment variables are configured.</p>}
+            </div>}
             <p className="mt-6 text-center text-sm text-[var(--text-muted)]">{mode === 'login' ? 'New to the portal?' : 'Already have an account?'} <button type="button" onClick={toggleMode} className="font-semibold text-[var(--text-primary)] underline decoration-[var(--text-muted)] underline-offset-4 hover:text-[var(--text-primary)]">{mode === 'login' ? 'Create an account' : 'Sign in instead'}</button></p>
           </form>
         </section>

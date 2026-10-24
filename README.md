@@ -2,7 +2,8 @@
 
 A project workspace for freelancers and their clients. Administrators create projects and milestones. Clients follow progress, review milestones, approve them or request changes, and download shared files.
 
-**Live demo:** [YOUR-LIVE-URL](YOUR-LIVE-URL)
+* **Live Demo:** [Client Portal](https://client-portal-seven-indol.vercel.app/)
+
 
 Choose **Try as Admin** or **Try as Client** on the login page. No sign-up is needed.
 
